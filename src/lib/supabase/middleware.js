@@ -1,21 +1,54 @@
-import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
+import { hasEnvVars } from "../utils";
 
-export async function middleware(request) {
-  const response = NextResponse.next();
-  const supabase = createMiddlewareClient({ req: request, res: response });
+export async function updateSession(request) {
+  let supabaseResponse = NextResponse.next({
+    request,
+  });
 
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-
-  if (!session && !request.nextUrl.pathname.startsWith("/auth")) {
-    return NextResponse.redirect(new URL("/auth/signin", request.url));
+  // If the env vars are not set, skip middleware check. You can remove this once you setup the project.
+  if (!hasEnvVars) {
+    return supabaseResponse;
   }
 
-  return response;
-}
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          supabaseResponse = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
 
-export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
-};
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (
+    request.nextUrl.pathname !== "/" &&
+    !user &&
+    !request.nextUrl.pathname.startsWith("/login") &&
+    !request.nextUrl.pathname.startsWith("")
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
+  return supabaseResponse;
+}

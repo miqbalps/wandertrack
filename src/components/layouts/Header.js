@@ -9,11 +9,7 @@ export default function Header({ darkMode, setDarkMode }) {
   return (
     <>
       {/* Vibrant top border with gradient */}
-      <div
-        className={`fixed top- z-10 w-full max-w-[500px] ${
-          darkMode ? "bg-gray-950" : "bg-white"
-        }`}
-      >
+      <div className={`${darkMode ? "bg-gray-950" : "bg-white"}`}>
         <div className="h-2 bg-yellow-500 w-full sticky top-0 z-50"></div>
 
         {/* Simplified Header */}

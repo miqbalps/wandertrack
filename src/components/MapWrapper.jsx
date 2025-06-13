@@ -7,13 +7,8 @@ import dynamic from "next/dynamic";
 const DynamicMap = dynamic(() => import("./Map"), {
   ssr: false,
   loading: () => (
-    <div
-      className="relative overflow-hidden rounded-2xl shadow-xl"
-      style={{ height: "400px" }}
-    >
-      <div className="flex items-center justify-center bg-gray-100 h-full">
-        <p>Loading map...</p>
-      </div>
+    <div className="flex items-center justify-center h-full">
+      <p>Loading map...</p>
     </div>
   ),
 });

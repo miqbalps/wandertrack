@@ -2,7 +2,7 @@
 
 import { Home, Search, Plus, BookOpen, User, CalendarDays } from "lucide-react"; // Import CalendarDays icon
 import Link from "next/link";
-import { usePathname } from 'next/navigation'; // Import usePathname untuk mendapatkan path saat ini
+import { usePathname } from "next/navigation"; // Import usePathname untuk mendapatkan path saat ini
 
 export default function BottomNav({ activeTab, setActiveTab, darkMode }) {
   const pathname = usePathname(); // Dapatkan path URL saat ini
@@ -61,7 +61,7 @@ export default function BottomNav({ activeTab, setActiveTab, darkMode }) {
       </Link>
 
       <Link
-        href={"/add"} // Ubah path ini ke /add atau /trip/add sesuai struktur yang benar
+        href={"/trip/add"} // Ubah path ini ke /add atau /trip/add sesuai struktur yang benar
         onClick={() => setActiveTab("create")}
         className="flex flex-col items-center p-2 relative -mt-8"
       >
