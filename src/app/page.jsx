@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link"; 
 import Image from "next/image";
 import {
   Camera,
@@ -13,6 +14,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import MapWrapper from "@/components/MapWrapper";
+// import ShareOptionsModal from "@/components/share/ShareOptionsModal";
 
 // Sample trip data with coordinates for mapping
 const trips = [
@@ -102,6 +104,7 @@ const trips = [
 export default function Page() {
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
+  // const [showShareModal, setShowShareModal] = useState(false);
 
   return (
     <>
@@ -126,12 +129,12 @@ export default function Page() {
               Capture every moment with our adventure tools.
             </p>
             <div className="flex gap-3">
-              <button className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-full font-bold flex items-center gap-1.5 text-sm transform hover:scale-105 transition-transform">
+              <Link href="#map-section" className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-full font-bold flex items-center gap-1.5 text-sm transform hover:scale-105 transition-transform">
                 <MapPin className="w-4 h-4" /> Start Exploring
-              </button>
-              <button className="px-4 py-2 border-2 border-white text-white hover:bg-white/10 rounded-full font-bold flex items-center gap-1.5 text-sm transform hover:scale-105 transition-transform">
+              </Link>
+              <Link href="/trip" className="px-4 py-2 border-2 border-white text-white hover:bg-white/10 rounded-full font-bold flex items-center gap 1.5 text-sm transform hover:scale-105 transition-transform">
                 <BookOpen className="w-4 h-4" /> Read Stories
-              </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -193,7 +196,7 @@ export default function Page() {
       </section>
 
       {/* Interactive Map Section */}
-      <section className="px-4 py-6">
+      <section id="map-section" className="px-4 py-6">
         <div className="mb-4">
           <h2 className="text-xl font-bold">
             Your <span className="text-yellow-500">Global</span> Footprint
