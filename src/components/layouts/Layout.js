@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Header from "./Header";
 import BottomNav from "./BottomNav";
+import AuthButton from "@/components/auth-button";
 
 const fontFamily =
   "'Gill Sans', 'Gill Sans MT', 'Century Gothic', 'Apple Gothic', sans-serif";
@@ -19,6 +20,10 @@ export default function AppLayout({ children }) {
       style={{ fontFamily }}
     >
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
+
+      <div className="px-4 py-2">
+        <AuthButton />
+      </div>
 
       <main className="relative">{children}</main>
 

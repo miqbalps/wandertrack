@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/client";
 
 export async function getAllTags() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase.from("tags").select("*").order("name");
 
   if (error) throw error;
@@ -9,7 +9,7 @@ export async function getAllTags() {
 }
 
 export async function createTag(name) {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("tags")
     .insert([
@@ -30,7 +30,7 @@ export async function createTag(name) {
 }
 
 export async function updateTag({ id, name, slug }) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("tags")
@@ -43,7 +43,7 @@ export async function updateTag({ id, name, slug }) {
   return data;
 }
 export async function deleteTag(id) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("tags")

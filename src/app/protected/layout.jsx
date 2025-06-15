@@ -1,10 +1,11 @@
 const React = require("react");
 const { DeployButton } = require("@/components/deploy-button");
 const { EnvVarWarning } = require("@/components/env-var-warning");
-const { AuthButton } = require("@/components-button");
+const AuthButton = require("@/components/auth-button");
 const { ThemeSwitcher } = require("@/components/theme-switcher");
 const { hasEnvVars } = require("@/lib/utils");
 const Link = require("next/link");
+const { default: ClientHeader } = require("@/components/ClientHeader");
 
 function ProtectedLayout(props) {
   const children = props.children;
@@ -43,7 +44,7 @@ function ProtectedLayout(props) {
           ),
           !hasEnvVars
             ? React.createElement(EnvVarWarning, null)
-            : React.createElement(AuthButton, null)
+            : React.createElement(ClientHeader, null)
         )
       ),
       React.createElement(

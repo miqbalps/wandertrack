@@ -98,20 +98,45 @@ export default function AddTripPage() {
           .from("trip-photos")
           .upload(fileName, formData.cover_photo);
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error("Upload image error:", uploadError);
+          throw uploadError;
+        }
 
         // Dapatkan URL publik dari gambar
         const {
           data: { publicUrl },
         } = supabase.storage.from("trip-photos").getPublicUrl(fileName);
-
+        console.log("Public URL dari foto:", publicUrl);
         coverPhotoUrl = publicUrl;
       }
 
       // Dapatkan user yang sedang login
       const {
         data: { user },
+        error: userError
       } = await supabase.auth.getUser();
+
+      if (userError) {
+        console.error("Error saat ambil user:", userError);
+        throw userError;
+      }
+
+      if (!user || !user.id) {
+        console.error("User tidak ditemukan atau belum login:", user);
+        throw new Error("User not authenticated");
+      }
+
+      console.log("User login:", user.id);
+      console.log("Form data sebelum insert trip:", {
+        title: formData.title,
+        description: formData.description,
+        start_date: formData.start_date,
+        end_date: formData.end_date,
+        cover_photo_url: coverPhotoUrl,
+        is_public: formData.is_public,
+        user_id: user.id,
+      });
 
       // Insert data trip ke database
       const { data: trip, error: tripError } = await supabase
@@ -130,7 +155,12 @@ export default function AddTripPage() {
         .select()
         .single();
 
-      if (tripError) throw tripError;
+      if (tripError) {
+        console.error("Trip insert error detail:", tripError);
+        throw tripError;
+      }
+
+      console.log("Trip berhasil ditambahkan:", trip);
 
       // Insert trip tags
       if (formData.tags.length > 0) {
@@ -159,7 +189,7 @@ export default function AddTripPage() {
       <main className="container mx-auto px-4 py-8 max-w-2xl pb-16">
         <div className="mb-8">
           <Link
-            href="/trips"
+            href="/trip"
             className="inline-flex items-center text-sm text-yellow-600 dark:text-yellow-400 hover:underline mb-4"
           >
             <ChevronDown className="w-4 h-4 rotate-90 mr-1" /> Back to trips
