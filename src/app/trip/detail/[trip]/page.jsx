@@ -186,7 +186,7 @@ export default function TripDetailPage() {
           url: window.location.href,
         });
       } catch (error) {
-        console.log("Error sharing:", error);
+        console.error("Error sharing:", error);
       }
     } else {
       // Fallback: copy to clipboard

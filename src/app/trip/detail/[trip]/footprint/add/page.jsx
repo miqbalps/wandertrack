@@ -217,8 +217,6 @@ export default function AddFootprintPage() {
         created_at: new Date().toISOString(),
       };
 
-      console.log("Footprint data:", footprintData);
-
       // Insert data footprint ke database
       const { data: footprint, error: footprintError } = await supabase
         .from("footprints")
@@ -230,8 +228,6 @@ export default function AddFootprintPage() {
         console.error("Footprint insert error:", footprintError);
         throw footprintError;
       }
-
-      console.log("Footprint berhasil ditambahkan:", footprint);
 
       // Redirect back to trip detail page
       if (tripId) {

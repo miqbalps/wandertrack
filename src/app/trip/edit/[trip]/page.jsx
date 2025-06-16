@@ -185,7 +185,6 @@ export default function EditTripPage() {
     async function loadTags() {
       try {
         const tags = await getAllTags();
-        console.log("Loaded tags:", tags);
         setAvailableTags(tags);
       } catch (error) {
         console.error("Failed to load tags:", error);

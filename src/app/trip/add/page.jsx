@@ -86,7 +86,6 @@ export default function AddTripPage() {
     async function loadTags() {
       try {
         const tags = await getAllTags();
-        console.log("Loaded tags:", tags);
         setAvailableTags(tags);
       } catch (error) {
         console.error("Failed to load tags:", error);
@@ -126,7 +125,6 @@ export default function AddTripPage() {
         const {
           data: { publicUrl },
         } = supabase.storage.from("trip-photos").getPublicUrl(fileName);
-        console.log("Public URL dari foto:", publicUrl);
         coverPhotoUrl = publicUrl;
       }
 
@@ -146,8 +144,6 @@ export default function AddTripPage() {
         throw new Error("User not authenticated");
       }
 
-      console.log("User login:", user.id);
-
       // Prepare trip data with created_at
       const tripData = {
         title: formData.title,
@@ -160,8 +156,6 @@ export default function AddTripPage() {
         created_at: new Date().toISOString(), // Add created_at timestamp
       };
 
-      console.log("Form data sebelum insert trip:", tripData);
-
       // Insert data trip ke database
       const { data: trip, error: tripError } = await supabase
         .from("trips")
@@ -173,8 +167,6 @@ export default function AddTripPage() {
         console.error("Trip insert error detail:", tripError);
         throw tripError;
       }
-
-      console.log("Trip berhasil ditambahkan:", trip);
 
       // Insert trip tags
       if (formData.tags.length > 0) {
