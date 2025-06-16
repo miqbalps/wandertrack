@@ -305,7 +305,7 @@ function VerticalTripCard({ trip, isOwner }) {
 function HorizontalTripCard({ trip, isOwner }) {
   return (
     <Link
-      href={isOwner ? `/trip/my/${trip.id}` : `/trip/community/${trip.id}`}
+      href={isOwner ? `/trip/my/${trip.id}` : `/trip/detail/${trip.id}`}
       className="group block"
     >
       <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-400 transition-colors shadow-sm hover:shadow-md">
