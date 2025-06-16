@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+// import { createClient } from "@/lib/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Compass, User, Lock, MailCheck } from "lucide-react";
 
@@ -13,7 +14,7 @@ function LoginForm({ className }) {
 
   async function handleLogin(e) {
     e.preventDefault();
-    const supabase = createClient();
+    // const supabase = createClient();
     setIsLoading(true);
     setError(null);
 

@@ -194,7 +194,7 @@ export default function TripListPage() {
             </h2>
             {filteredMyTrips.length > 2 && (
               <Link
-                href="/trips/my"
+                href="/trip/my"
                 className="text-xs flex items-center text-yellow-600 dark:text-yellow-400 font-medium"
               >
                 View All <ChevronRight className="w-3 h-3" />
