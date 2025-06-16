@@ -55,16 +55,15 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-// import { supabase } from '@/lib/supabase/client';
+// import { supabase } from "@/lib/supabase/client";
 import Link from "next/link";
 
 export default function AuthButton() {
-  const supabase = createClient();
   const [user, setUser] = useState(null);
 
   useEffect(() => {
     const fetchUser = async () => {
-      // const supabase = await createClient();
+      const supabase = await createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -75,7 +74,7 @@ export default function AuthButton() {
   }, []);
 
   const handleLogout = async () => {
-    // const supabase = await createClient();
+    const supabase = await createClient();
     await supabase.auth.signOut();
     window.location.reload();
   };
