@@ -26,21 +26,23 @@ export default function TripListPage() {
       const supabase = createClient();
 
       try {
-        // Get current user
+        // First check for session
         const {
-          data: { user },
-          error: userError,
-        } = await supabase.auth.getUser();
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
 
-        if (userError) {
-          console.error("Error fetching user:", userError.message, userError);
-          // Continue even if user fetch fails (might be logged out)
+        if (sessionError) {
+          console.error("Session error:", sessionError.message);
+          // Continue without user - will show public trips only
         }
 
-        setCurrentUser(user);
+        if (session?.user) {
+          setCurrentUser(session.user);
+        }
 
         // Fetch trips with tags and footprints count
-        const { data: tripsData, error } = await supabase
+        const { data: tripsData, error: tripsError } = await supabase
           .from("trips")
           .select(
             `
@@ -60,16 +62,19 @@ export default function TripListPage() {
           .eq("is_public", true)
           .order("created_at", { ascending: false });
 
-        if (error) {
-          console.error("Error fetching trips:", error.message, error);
-          throw error;
+        if (tripsError) {
+          console.error("Error fetching trips:", tripsError.message);
+          throw tripsError;
         }
 
         // Process the data to match our component needs
         const processedTrips =
           tripsData?.map((trip) => ({
             ...trip,
-            username: `user_${trip.user_id?.slice(-8) || "anonymous"}`, // Generate username from user_id
+            username:
+              session?.user?.id === trip.user_id
+                ? "You"
+                : `user_${trip.user_id?.slice(-8) || "anonymous"}`,
             footprint_count: trip.footprints?.length || 0,
             tags: trip.trip_tags?.map((tt) => tt.tags) || [],
           })) || [];
@@ -82,7 +87,23 @@ export default function TripListPage() {
       }
     };
 
+    // Set up real-time auth state listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setCurrentUser(session.user);
+      } else {
+        setCurrentUser(null);
+      }
+    });
+
     fetchData();
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   // Filter trips based on search and filter
