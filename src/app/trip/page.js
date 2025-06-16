@@ -21,9 +21,9 @@ export default function TripListPage() {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const supabase = createClient();
   useEffect(() => {
     const fetchData = async () => {
-      const supabase = createClient();
 
       try {
         // First check for session
@@ -186,8 +186,8 @@ export default function TripListPage() {
             <div className="relative">
               <div className="overflow-x-auto pb-3 -mx-4 px-4">
                 <div
-                  className="flex gap-3"
-                  style={{ width: `${displayedMyTrips.length * 180}px` }}
+                  className="flex gap-3 items-strectch"
+                  // style={{ width: `${displayedMyTrips.length * 180}px` }}
                 >
                   {displayedMyTrips.map((trip) => (
                     <VerticalTripCard
@@ -257,7 +257,7 @@ function VerticalTripCard({ trip, isOwner }) {
       href={`/trip/detail/${trip.id}`}
       className="group block w-[170px] flex-shrink-0"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-400 transition-colors shadow-sm hover:shadow-md">
+      <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-400 transition-colors shadow-sm hover:shadow-md h-full flex flex-col">
         {/* Cover Image */}
         <div className="relative h-32">
           {trip.cover_photo_url ? (
@@ -280,14 +280,15 @@ function VerticalTripCard({ trip, isOwner }) {
         </div>
 
         {/* Trip Info */}
-        <div className="p-3">
-          <h2 className="font-semibold text-sm line-clamp-1 group-hover:text-yellow-500 dark:group-hover:text-yellow-400">
-            {trip.title}
-          </h2>
-          <p className="text-xs opacity-60 line-clamp-2 mt-1">
-            {trip.description}
-          </p>
-
+        <div className="p-3 flex-grow flex flex-col justify-between">
+          <div> {/* Wrapper untuk judul dan deskripsi */}
+            <h2 className="font-semibold text-sm line-clamp-1 group-hover:text-yellow-500 dark:group-hover:text-yellow-400">
+              {trip.title}
+            </h2>
+            <p className="text-xs opacity-60 line-clamp-2 mt-1 min-h-[2.5rem]"> {/* PENTING: Tambahkan min-h-[2.5rem] */}
+              {trip.description}
+            </p>
+          </div>
           <div className="mt-2 flex flex-wrap gap-1 text-[10px]">
             <span className="inline-flex items-center bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-1.5 py-0.5 rounded-full">
               <User className="w-2.5 h-2.5 mr-0.5" />@{trip.username}
