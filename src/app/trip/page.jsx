@@ -157,7 +157,7 @@ export default function TripListPage() {
       <header className="px-4 pt-4 pb-2">
         <div className="flex justify-between items-center mb-3">
           <div>
-            <h1 className="text-xl font-bold">Explore Expeditions</h1>
+            <h1 className="text-xl font-bold">Explore Trips</h1>
             <p className="text-xs opacity-60">Track your adventures</p>
           </div>
           <span className="text-xs bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 px-2 py-1 rounded-full">
@@ -189,7 +189,7 @@ export default function TripListPage() {
         <section className="mb-6">
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-sm font-semibold opacity-70 uppercase tracking-wider">
-              My Expeditions
+              My Trips
             </h2>
             {myTrips.length > 3 && (
               <Link
@@ -235,11 +235,11 @@ export default function TripListPage() {
           )}
         </section>
 
-        {/* Community Trips Section */}
+        {/* Other Trips Section */}
         <section>
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-sm font-semibold opacity-70 uppercase tracking-wider">
-              Community Expeditions
+              Other Trips
             </h2>
             {otherTrips.length > 3 && (
               <Link
@@ -276,7 +276,7 @@ function VerticalTripCard({ trip, isOwner }) {
       href={`/trip/detail/${trip.id}`}
       className="group block w-[180px] flex-shrink-0"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-400 transition-colors shadow-sm hover:shadow-md h-[240px]">
+      <div className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-400 transition-colors shadow-sm hover:shadow-md h-[240px]">
         {/* Cover Image */}
         <div className="relative h-[120px] w-full">
           {trip.cover_photo_url ? (
@@ -300,11 +300,15 @@ function VerticalTripCard({ trip, isOwner }) {
 
         {/* Trip Info */}
         <div className="p-3 flex-grow flex flex-col justify-between">
-          <div> {/* Wrapper untuk judul dan deskripsi */}
+          <div>
+            {" "}
+            {/* Wrapper untuk judul dan deskripsi */}
             <h2 className="font-semibold text-sm line-clamp-1 group-hover:text-yellow-500 dark:group-hover:text-yellow-400">
               {trip.title}
             </h2>
-            <p className="text-xs opacity-60 line-clamp-2 mt-1 min-h-[2.5rem]"> {/* PENTING: Tambahkan min-h-[2.5rem] */}
+            <p className="text-xs opacity-60 line-clamp-2 mt-1 min-h-[2.5rem]">
+              {" "}
+              {/* PENTING: Tambahkan min-h-[2.5rem] */}
               {trip.description}
             </p>
           </div>
@@ -329,7 +333,7 @@ function HorizontalTripCard({ trip, isOwner }) {
       href={isOwner ? `/trip/my/${trip.id}` : `/trip/detail/${trip.id}`}
       className="group block"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-400 transition-colors shadow-sm hover:shadow-md">
+      <div className="bg-white dark:bg-gray-900 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-400 transition-colors shadow-sm hover:shadow-md">
         <div className="flex">
           {/* Cover Image */}
           <div className="relative w-1/4 h-auto flex-shrink-0">

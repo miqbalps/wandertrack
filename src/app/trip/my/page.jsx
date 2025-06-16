@@ -76,7 +76,6 @@ export default function MyTripsPage() {
             )
           `
           )
-          .eq("is_public", true)
           .order("created_at", { ascending: false });
 
         if (tripsError) {
@@ -153,7 +152,7 @@ export default function MyTripsPage() {
       <header className="px-4 pt-4 pb-2">
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-sm font-semibold opacity-70 uppercase tracking-wider">
-            My Expeditions
+            My Trips
           </h2>
         </div>
 

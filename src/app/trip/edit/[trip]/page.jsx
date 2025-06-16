@@ -204,14 +204,14 @@ export default function EditTripPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center">
         <div className="animate-spin text-yellow-500">↻</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-950">
       <main className="container mx-auto px-4 py-8 max-w-2xl pb-16">
         <div className="mb-8">
           <Link
@@ -222,7 +222,7 @@ export default function EditTripPage() {
           </Link>
           <h1 className="text-2xl font-bold mb-2 flex items-center gap-2">
             <Compass className="w-6 h-6 text-yellow-500" />
-            Edit Expedition
+            Edit Trip
           </h1>
           <p className="text-sm opacity-60">Update your adventure details</p>
         </div>
@@ -290,7 +290,7 @@ export default function EditTripPage() {
                 htmlFor="title"
                 className="block text-sm font-medium mb-2 opacity-70"
               >
-                Expedition Title
+                Trip Title
               </label>
               <div className="relative">
                 <input
@@ -322,7 +322,7 @@ export default function EditTripPage() {
                 onChange={handleChange}
                 rows={4}
                 className="w-full px-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-yellow-500 bg-white/50 dark:bg-gray-800/50"
-                placeholder="Tell us about your expedition..."
+                placeholder="Tell us about your Trip..."
               />
             </div>
 
@@ -384,7 +384,7 @@ export default function EditTripPage() {
                 htmlFor="is_public"
                 className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
               >
-                Make this expedition public
+                Make this Trip public
               </label>
             </div>
           </div>
@@ -431,7 +431,7 @@ export default function EditTripPage() {
             {isSubmitting ? (
               <span className="animate-spin">↻</span>
             ) : (
-              "Update Expedition"
+              "Update Trip"
             )}
           </button>
         </form>

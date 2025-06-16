@@ -212,7 +212,7 @@ export default function AddTripPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-950">
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-2xl pb-16">
         <div className="mb-8">
@@ -224,7 +224,7 @@ export default function AddTripPage() {
           </Link>
           <h1 className="text-2xl font-bold mb-2 flex items-center gap-2">
             <Compass className="w-6 h-6 text-yellow-500" />
-            Create New Expedition
+            Create New Trip
           </h1>
           <p className="text-sm opacity-60">
             Document your adventure with details that bring your journey to life
@@ -294,7 +294,7 @@ export default function AddTripPage() {
                 htmlFor="title"
                 className="block text-sm font-medium mb-2 opacity-70"
               >
-                Expedition Title
+                Trip Title
               </label>
               <div className="relative">
                 <input
@@ -326,7 +326,7 @@ export default function AddTripPage() {
                 onChange={handleChange}
                 rows={4}
                 className="w-full px-4 py-2 text-sm border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-yellow-500 bg-white/50 dark:bg-gray-800/50"
-                placeholder="Tell us about your expedition..."
+                placeholder="Tell us about your Trip..."
               />
             </div>
 
@@ -388,7 +388,7 @@ export default function AddTripPage() {
                 htmlFor="is_public"
                 className="ml-2 block text-sm text-gray-700 dark:text-gray-300"
               >
-                Make this expedition public
+                Make this Trip public
               </label>
             </div>
           </div>
@@ -438,7 +438,7 @@ export default function AddTripPage() {
                 <span className="animate-spin">↻</span>
               ) : (
                 <>
-                  <Plus className="w-4 h-4" /> Create Expedition
+                  <Plus className="w-4 h-4" /> Create Trip
                 </>
               )}
             </button>

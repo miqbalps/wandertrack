@@ -277,14 +277,14 @@ export default function EditFootprintPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-gray-950 flex items-center justify-center">
         <div className="animate-spin text-yellow-500">↻</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900">
+    <div className="min-h-screen bg-white dark:bg-gray-950">
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-2xl pb-16">
         <div className="mb-8">

@@ -153,7 +153,7 @@ export default function OtherTripsPage() {
       <header className="px-4 pt-4 pb-2">
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-sm font-semibold opacity-70 uppercase tracking-wider">
-            Community Expeditions
+            Communit Trips
           </h2>
         </div>
 

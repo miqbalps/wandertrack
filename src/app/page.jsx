@@ -2,36 +2,22 @@
 
 import React, { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import MapHome from "@/components/MapHome";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
-  FaWhatsapp,
-  FaFacebook,
-  FaTwitter,
-  FaTelegram,
-  FaLink,
-} from "react-icons/fa";
-import MapWrapper from "@/components/MapWrapper";
 
 import {
   Camera,
   MapPin,
-  Compass,
+  Calendar,
   Globe,
-  BookOpen,
-  Share2,
   X,
   ChevronRight,
+  Copy,
+  ArrowRight,
   User,
-  Users,
 } from "lucide-react";
+import "leaflet/dist/leaflet.css";
 
 // import ShareOptionsModal from "@/components/share/ShareOptionsModal";
 
@@ -41,7 +27,7 @@ const trips = [
     id: 1,
     user_id: 1,
     username: "explorer_jane",
-    title: "Himalayan Expedition",
+    title: "Himalayan Trip",
     description:
       "A 30-day trek through the Nepalese Himalayas, documenting remote villages and mountain landscapes.",
     start_date: "2023-10-15",
@@ -124,14 +110,69 @@ export default function Page() {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTrip, setSelectedTrip] = useState(null);
+  const [selectedFootprint, setSelectedFootprint] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const supabase = createClient();
+  const [userTripsForMap, setUserTripsForMap] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
   // const handleShare = (trip) => {
   //   alert(`Shared trip: ${trip.title}`)
   // }
+
+  const fetchUserTripsWithFootprints = async () => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (!session?.user) return [];
+
+      const { data: tripsData, error } = await supabase
+        .from("trips")
+        .select(
+          `
+        *,
+        footprints (
+          id,
+          trip_id,
+          title,
+          description,
+          location,
+          date,
+          latitude,
+          longitude,
+          cover_photo_url
+        )
+      `
+        )
+        .eq("user_id", session.user.id);
+
+      if (error) throw error;
+
+      return (
+        tripsData?.map((trip) => ({
+          ...trip,
+          locations:
+            trip.footprints?.map((f) => ({
+              id: f.id,
+              trip_id: f.trip_id,
+              lat: f.latitude,
+              lng: f.longitude,
+              name: f.title,
+              description: f.description,
+              date: f.date,
+              location: f.location,
+              photo: f.cover_photo_url,
+            })) || [],
+        })) || []
+      );
+    } catch (error) {
+      console.error("Error fetching user trips:", error);
+      return [];
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -149,29 +190,35 @@ export default function Page() {
 
         if (session?.user) {
           setCurrentUser(session.user);
+
+          // Fetch user's trips for the map
+          const userTrips = await fetchUserTripsWithFootprints();
+          setUserTripsForMap(userTrips);
         }
 
-        // Fetch trips with tags, profiles, and footprints
+        // Fetch trips with tags, profiles, and footprints for Recent Trips section
         const { data: tripsData, error: tripsError } = await supabase
           .from("trips")
           .select(
             `
-            *,
-            trip_tags (
-              tags (
-                id,
-                name,
-                slug
-              )
-            ),
-            footprints (
+          *,
+          trip_tags (
+            tags (
               id,
-              title,
-              location,
-              date,
-              cover_photo_url
+              name,
+              slug
             )
-          `
+          ),
+          footprints (
+            id,
+            title,
+            location,
+            date,
+            latitude,
+            longitude,
+            cover_photo_url
+          )
+        `
           )
           .eq("is_public", true)
           .order("created_at", { ascending: false })
@@ -208,6 +255,9 @@ export default function Page() {
                   day: "numeric",
                 }),
                 location: f.location,
+                lat: f.latitude,
+                lng: f.longitude,
+                photo: f.cover_photo_url,
               })) || [],
             tags: trip.trip_tags?.map((tt) => tt.tags) || [],
           })) || [];
@@ -226,8 +276,11 @@ export default function Page() {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         setCurrentUser(session.user);
+        // Refetch user trips when auth state changes
+        fetchUserTripsWithFootprints().then(setUserTripsForMap);
       } else {
         setCurrentUser(null);
+        setUserTripsForMap([]);
       }
     });
 
@@ -288,7 +341,6 @@ export default function Page() {
             View All <ChevronRight className="w-4 h-4" />
           </Link>
         </div>
-
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin text-yellow-500">↻</div>
@@ -296,45 +348,47 @@ export default function Page() {
         ) : trips.length > 0 ? (
           <div className="grid gap-4">
             {trips.map((trip) => (
-              <div
+              <Link
                 key={trip.id}
-                className="relative group overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-                onClick={() => setSelectedTrip(trip)}
+                href={`/trip/detail/${trip.id}`}
+                className="block group"
               >
-                <div className="relative h-40">
-                  <Image
-                    src={trip.cover_photo_url || "/default-trip-cover.jpg"}
-                    alt={trip.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-bold text-base">{trip.title}</h3>
-                    <span className="text-xs bg-black/50 px-2 py-0.5 rounded-full">
-                      {trip.start_date}
-                    </span>
+                <div className="relative group overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow">
+                  <div className="relative h-40">
+                    <Image
+                      src={trip.cover_photo_url || "/default-trip-cover.jpg"}
+                      alt={trip.title}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
                   </div>
-                  <p className="text-xs line-clamp-2 mb-2">
-                    {trip.description}
-                  </p>
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex gap-2">
-                      <span className="flex items-center gap-1 bg-yellow-500/90 text-black px-2 py-0.5 rounded-full">
-                        <MapPin className="w-3 h-3" /> {trip.footprint_count}
-                      </span>
-                      <span className="flex items-center gap-1 bg-white/20 px-2 py-0.5 rounded-full">
-                        <Camera className="w-3 h-3" /> {trip.photo_count}
+                  <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-bold text-base">{trip.title}</h3>
+                      <span className="text-xs bg-black/50 px-2 py-0.5 rounded-full">
+                        {trip.start_date}
                       </span>
                     </div>
-                    <span className="bg-black/50 px-2 py-0.5 rounded-full">
-                      @{trip.username}
-                    </span>
+                    <p className="text-xs line-clamp-2 mb-2">
+                      {trip.description}
+                    </p>
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex gap-2">
+                        <span className="flex items-center gap-1 bg-yellow-500/90 text-black px-2 py-0.5 rounded-full">
+                          <MapPin className="w-3 h-3" /> {trip.footprint_count}
+                        </span>
+                        <span className="flex items-center gap-1 bg-white/20 px-2 py-0.5 rounded-full">
+                          <Camera className="w-3 h-3" /> {trip.photo_count}
+                        </span>
+                      </div>
+                      <span className="bg-black/50 px-2 py-0.5 rounded-full">
+                        @{trip.username}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         ) : (
@@ -350,16 +404,43 @@ export default function Page() {
           <h2 className="text-xl font-bold">
             Your <span className="text-yellow-500">Global</span> Footprint
           </h2>
-          <p className="text-sm mt-1">
-            Track every step of your journey with our interactive maps
+          <p className="text-sm mt-1 flex items-center gap-2">
+            {currentUser ? (
+              <>
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+                </span>
+                <span>
+                  {userTripsForMap.reduce(
+                    (acc, trip) => acc + (trip.locations?.length || 0),
+                    0
+                  )}{" "}
+                  lokasi dalam {userTripsForMap.length} perjalanan
+                </span>
+              </>
+            ) : (
+              "Sign in to see your journey map"
+            )}
           </p>
         </div>
 
-        <MapWrapper
-          trips={trips}
-          onTripSelect={setSelectedTrip}
-          className="aspect-[4/3] mb-4"
-        />
+        {currentUser ? (
+          <MapHome
+            trips={userTripsForMap}
+            onFootprintSelect={setSelectedFootprint}
+            className="aspect-[4/3] mb-4"
+          />
+        ) : (
+          <div className="aspect-[4/3] mb-4 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+            <Link
+              href="/login"
+              className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-full font-bold flex items-center gap-1.5 text-sm"
+            >
+              <User className="w-4 h-4" /> Sign in to view your map
+            </Link>
+          </div>
+        )}
 
         <Link
           href="/trip"
@@ -369,113 +450,99 @@ export default function Page() {
         </Link>
       </section>
 
-      {/* Trip Detail Modal */}
-      {selectedTrip && (
+      {/* Footprint Detail Modal */}
+      {selectedFootprint && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
-          <div
-            className={`relative w-full max-w-md max-h-[80vh] overflow-y-auto rounded-xl p-4 ${
-              darkMode ? "bg-gray-800" : "bg-white"
-            }`}
-          >
-            <button
-              onClick={() => setSelectedTrip(null)}
-              className="absolute top-3 right-3 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <h2 className="text-xl font-bold mb-1">{selectedTrip.title}</h2>
-            <p className="text-sm mb-3">by @{selectedTrip.username}</p>
-
-            <div className="relative h-40 w-full mb-3 rounded-lg overflow-hidden">
-              <Image
-                src={selectedTrip.cover_photo_url || "/default-trip-cover.jpg"}
-                alt={selectedTrip.title}
-                fill
-                className="object-cover"
-              />
+          <div className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-xl shadow-lg overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-bold">Location Details</h3>
+              <button
+                onClick={() => setSelectedFootprint(null)}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
-            <p className="mb-3 text-sm">{selectedTrip.description}</p>
+            {/* Modal Content */}
+            <div className="p-4">
+              {/* Cover Photo */}
+              <div className="relative h-48 mb-4 rounded-lg overflow-hidden">
+                {selectedFootprint.photo ? (
+                  <Image
+                    src={selectedFootprint.photo}
+                    alt={selectedFootprint.name}
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
+                    <MapPin className="w-12 h-12 text-white" />
+                  </div>
+                )}
+              </div>
 
-            {selectedTrip.locations?.length > 0 && (
-              <div className="mb-4">
-                <h3 className="font-bold mb-2 text-sm">Trip Locations</h3>
-                <div className="space-y-2">
-                  {selectedTrip.locations.map((loc, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      <div className="bg-yellow-500 text-black p-1.5 rounded-full">
-                        <MapPin className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-sm">{loc.name}</h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                          {loc.location} • {loc.date}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+              {/* Location Info */}
+              <div className="space-y-4">
+                <div>
+                  <h2 className="text-xl font-bold mb-1">
+                    {selectedFootprint.name}
+                  </h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {selectedFootprint.location}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm">
+                  <Calendar className="w-4 h-4 text-yellow-500" />
+                  <span>{selectedFootprint.date}</span>
+                </div>
+
+                {selectedFootprint.description && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-5 whitespace-pre-line text-justify">
+                    {selectedFootprint.description}
+                  </p>
+                )}
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                      Latitude
+                    </p>
+                    <p className="font-medium">{selectedFootprint.lat}°N</p>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-lg">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                      Longitude
+                    </p>
+                    <p className="font-medium">{selectedFootprint.lng}°E</p>
+                  </div>
                 </div>
               </div>
-            )}
+            </div>
 
-            <div className="flex justify-between items-center">
-              <div className="flex gap-2">
-                <span className="flex items-center gap-1 bg-yellow-500/90 text-black px-2 py-1 rounded-full text-xs">
-                  <MapPin className="w-3 h-3" /> {selectedTrip.footprint_count}
-                </span>
-                <span className="flex items-center gap-1 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded-full text-xs">
-                  <Camera className="w-3 h-3" /> {selectedTrip.photo_count}
-                </span>
-              </div>
-              <div className="flex gap-2 ml-auto">
-                <a
-                  href={`https://wa.me/?text=Check out this trip: ${selectedTrip.title}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-green-500 hover:scale-110 transition"
-                >
-                  <FaWhatsapp className="w-5 h-5" />
-                </a>
-                <a
-                  href={`https://www.facebook.com/sharer/sharer.php?u=https://example.com/trip/${selectedTrip.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:scale-110 transition"
-                >
-                  <FaFacebook className="w-5 h-5" />
-                </a>
-                <a
-                  href={`https://twitter.com/intent/tweet?text=Check out this trip: ${selectedTrip.title}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-400 hover:scale-110 transition"
-                >
-                  <FaTwitter className="w-5 h-5" />
-                </a>
-                <a
-                  href={`https://t.me/share/url?url=https://example.com/trip/${selectedTrip.id}&text=Check out this trip!`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:scale-110 transition"
-                >
-                  <FaTelegram className="w-5 h-5" />
-                </a>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(
-                      `https://example.com/trip/${selectedTrip.id}`
-                    );
-                    alert("Link copied!");
-                  }}
-                  className="text-gray-700 hover:scale-110 transition"
-                >
-                  <FaLink className="w-5 h-5" />
-                </button>
-              </div>
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between p-4 border-t border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    `${selectedFootprint.lat},${selectedFootprint.lng}`
+                  );
+                  alert("Coordinates copied!");
+                }}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <Copy className="w-4 h-4" />
+              </button>
+
+              <Link
+                href={`/trip/detail/${selectedFootprint.trip_id}/footprint/${selectedFootprint.id}`}
+                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg text-sm font-medium flex items-center gap-2"
+              >
+                View Full Details
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
           </div>
         </div>

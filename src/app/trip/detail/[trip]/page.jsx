@@ -20,8 +20,15 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useParams, useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 
 export default function TripDetailPage() {
+  const RouteMap = dynamic(() => import("@/components/RouteMap"), {
+    ssr: false,
+    loading: () => (
+      <div className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded-xl aspect-[4/3]" />
+    ),
+  });
   const params = useParams();
   const router = useRouter();
   const [trip, setTrip] = useState(null);
@@ -213,9 +220,9 @@ export default function TripDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700">
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-950">
         <div className="px-4 py-3 flex items-center justify-between">
           <button
             onClick={() => router.back()}
@@ -283,7 +290,7 @@ export default function TripDetailPage() {
       </section>
 
       {/* Trip Info */}
-      <section className="px-4 py-6 bg-white dark:bg-gray-800">
+      <section className="px-4 py-6 bg-white dark:bg-gray-950">
         <div className="mb-4">
           <h1 className="text-2xl font-bold mb-2">{trip.title}</h1>
           <p className="text-gray-600 dark:text-gray-400 leading-relaxed whitespace-pre-line text-justify">
@@ -376,7 +383,7 @@ export default function TripDetailPage() {
       </section>
 
       {/* Tab Navigation */}
-      <section className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+      <section className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
         <div className="px-4">
           <div className="flex space-x-8">
             <button
@@ -458,12 +465,12 @@ export default function TripDetailPage() {
             {trip.photo_count && trip.photo_count > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {/* Photo grid would go here */}
-                <div className="aspect-square bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                <div className="aspect-square bg-gray-200 dark:bg-gray-800 rounded-lg flex items-center justify-center">
                   <Camera className="w-8 h-8 text-gray-400" />
                 </div>
               </div>
             ) : (
-              <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+              <div className="text-center py-12 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
                 <Camera className="mx-auto w-8 h-8 text-gray-300 dark:text-gray-600 mb-3" />
                 <h3 className="text-lg font-medium mb-2">No photos yet</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -475,14 +482,36 @@ export default function TripDetailPage() {
         )}
 
         {activeTab === "route" && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-            <div className="text-center py-8">
-              <Navigation className="mx-auto w-8 h-8 text-gray-300 dark:text-gray-600 mb-3" />
-              <h3 className="text-lg font-medium mb-2">Route Map</h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Interactive map showing your journey route
-              </p>
-            </div>{" "}
+          <div className="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+            {footprints.length > 0 ? (
+              <>
+                <RouteMap
+                  footprints={footprints}
+                  className="aspect-[4/3] mb-4"
+                />
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {footprints.map((footprint, index) => (
+                    <div
+                      key={footprint.id}
+                      className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 px-3 py-1.5 rounded-full text-sm"
+                    >
+                      <div className="w-5 h-5 bg-yellow-500 rounded-full flex items-center justify-center text-black text-xs font-bold">
+                        {index + 1}
+                      </div>
+                      <span>{footprint.title}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-8">
+                <Navigation className="mx-auto w-8 h-8 text-gray-300 dark:text-gray-600 mb-3" />
+                <h3 className="text-lg font-medium mb-2">No footprints yet</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Add footprints to see your journey route
+                </p>
+              </div>
+            )}
           </div>
         )}
       </main>
@@ -531,7 +560,12 @@ export default function TripDetailPage() {
 
 function FootprintCard({ footprint, index, isOwner, tripId, onDelete }) {
   const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter();
   const supabase = createClient();
+
+  const handleClick = () => {
+    router.push(`/trip/detail/${tripId}/footprint/${footprint.id}`);
+  };
 
   const handleDelete = async (footprintId) => {
     if (!isOwner || !footprintId) return;
@@ -561,7 +595,10 @@ function FootprintCard({ footprint, index, isOwner, tripId, onDelete }) {
   };
 
   return (
-    <div className="relative group overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow">
+    <div
+      onClick={handleClick}
+      className="relative group overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+    >
       <div className="relative h-40">
         {footprint.cover_photo_url ? (
           <>
@@ -579,22 +616,23 @@ function FootprintCard({ footprint, index, isOwner, tripId, onDelete }) {
           </div>
         )}
 
-        {/* Update the delete button */}
+        {/* Action buttons */}
         {isOwner && (
           <div className="absolute top-2 right-2 flex gap-2">
             <Link
               href={`/trip/detail/${tripId}/footprint/edit/${footprint.id}`}
-              className="p-1.5 bg-white/90 hover:bg-yellow-500 hover:text-black rounded-lg transition-colors backdrop-blur-sm"
+              onClick={(e) => e.stopPropagation()} // Prevent card click when clicking edit
+              className="p-1.5 bg-white/90 dark:bg-gray-900 hover:bg-yellow-500 hover:text-black rounded-lg transition-colors backdrop-blur-sm"
             >
               <Edit className="w-4 h-4" />
             </Link>
             <button
               onClick={(e) => {
-                e.stopPropagation();
+                e.stopPropagation(); // Prevent card click when clicking delete
                 handleDelete(footprint.id);
               }}
               disabled={isDeleting}
-              className="p-1.5 bg-white/90 hover:bg-red-500 hover:text-white rounded-lg transition-colors backdrop-blur-sm disabled:opacity-50"
+              className="p-1.5 bg-white/90 dark:bg-gray-900 hover:bg-red-500 hover:text-white rounded-lg transition-colors backdrop-blur-sm disabled:opacity-50"
             >
               {isDeleting ? (
                 <span className="animate-spin">↻</span>
