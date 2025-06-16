@@ -11,146 +11,105 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
-
-// Mock data based on your schema
-const allTrips = [
-  {
-    id: 1,
-    user_id: 1,
-    username: "explorer_jane",
-    title: "Himalayan Expedition",
-    description:
-      "A 30-day trek through the Nepalese Himalayas, documenting remote villages and mountain landscapes.",
-    start_date: "2023-10-15",
-    end_date: "2023-11-14",
-    footprint_count: 18,
-    photo_count: 127,
-    cover_photo:
-      "https://images.unsplash.com/photo-1585409677983-0f6c41ca9c3b?q=80&w=1469&auto=format&fit=crop",
-  },
-  {
-    id: 2,
-    user_id: 2,
-    username: "desert_nomad",
-    title: "Sahara Crossing",
-    description:
-      "Journey across the Sahara desert following ancient trade routes.",
-    start_date: "2023-05-01",
-    end_date: "2023-05-21",
-    footprint_count: 12,
-    photo_count: 89,
-    cover_photo:
-      "https://images.unsplash.com/photo-1682686580391-615b1f28e5ee?q=80&w=1470&auto=format&fit=crop",
-  },
-  {
-    id: 3,
-    user_id: 1,
-    username: "explorer_jane",
-    title: "Amazon Rainforest",
-    description:
-      "Exploring biodiversity in the Amazon basin with local guides.",
-    start_date: "2023-08-10",
-    end_date: "2023-08-25",
-    footprint_count: 8,
-    photo_count: 64,
-    cover_photo:
-      "https://images.unsplash.com/photo-1516908205727-40afad9449a8?q=80&w=1470&auto=format&fit=crop",
-  },
-  {
-    id: 4,
-    user_id: 3,
-    username: "arctic_trekker",
-    title: "Arctic Circle",
-    description: "Documenting climate change effects in the Arctic region.",
-    start_date: "2023-12-01",
-    end_date: "2023-12-15",
-    footprint_count: 6,
-    photo_count: 42,
-    cover_photo:
-      "https://images.unsplash.com/photo-1517783999520-f068d7431a60?q=80&w=1470&auto=format&fit=crop",
-  },
-  {
-    id: 5,
-    user_id: 4,
-    username: "ocean_explorer",
-    title: "Pacific Islands",
-    description: "Island hopping across the South Pacific",
-    start_date: "2023-07-01",
-    end_date: "2023-07-21",
-    footprint_count: 9,
-    photo_count: 78,
-    cover_photo:
-      "https://images.unsplash.com/photo-1505228395891-9a51e7e86bf6?q=80&w=1433&auto=format&fit=crop",
-  },
-  {
-    id: 6,
-    user_id: 5,
-    username: "mountain_climber",
-    title: "Andes Adventure",
-    description: "Climbing the highest peaks in South America",
-    start_date: "2023-09-10",
-    end_date: "2023-10-05",
-    footprint_count: 14,
-    photo_count: 112,
-    cover_photo:
-      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?q=80&w=1470&auto=format&fit=crop",
-  },
-  {
-    id: 7,
-    user_id: 6,
-    username: "urban_explorer",
-    title: "European Capitals",
-    description: "Photographing architecture in major European cities",
-    start_date: "2023-04-15",
-    end_date: "2023-05-30",
-    footprint_count: 11,
-    photo_count: 203,
-    cover_photo:
-      "https://images.unsplash.com/photo-1499856871958-5b9627545d1a?q=80&w=1520&auto=format&fit=crop",
-  },
-  {
-    id: 8,
-    user_id: 1,
-    username: "explorer_jane",
-    title: "Siberian Wilderness",
-    description: "Exploring the remote regions of Siberia",
-    start_date: "2023-06-01",
-    end_date: "2023-06-20",
-    footprint_count: 7,
-    photo_count: 56,
-    cover_photo:
-      "https://images.unsplash.com/photo-1511593358241-7eea1f3c84e5?q=80&w=1374&auto=format&fit=crop",
-  },
-];
-
-// Current user ID (would come from auth in real app)
-const currentUserId = 1;
+import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function TripListPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("all");
+  const [trips, setTrips] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Separate trips into mine and others
-  const myTrips = allTrips.filter((trip) => trip.user_id === currentUserId);
-  const otherTrips = allTrips.filter((trip) => trip.user_id !== currentUserId);
+  useEffect(() => {
+    const fetchData = async () => {
+      const supabase = createClient();
+
+      try {
+        // Get current user
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError) {
+          console.error("Error fetching user:", userError.message, userError);
+          // Continue even if user fetch fails (might be logged out)
+        }
+
+        setCurrentUser(user);
+
+        // Fetch trips with tags and footprints count
+        const { data: tripsData, error } = await supabase
+          .from("trips")
+          .select(
+            `
+            *,
+            trip_tags (
+              tags (
+                id,
+                name,
+                slug
+              )
+            ),
+            footprints (
+              id
+            )
+          `
+          )
+          .eq("is_public", true)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Error fetching trips:", error.message, error);
+          throw error;
+        }
+
+        // Process the data to match our component needs
+        const processedTrips =
+          tripsData?.map((trip) => ({
+            ...trip,
+            username: `user_${trip.user_id?.slice(-8) || "anonymous"}`, // Generate username from user_id
+            footprint_count: trip.footprints?.length || 0,
+            tags: trip.trip_tags?.map((tt) => tt.tags) || [],
+          })) || [];
+
+        setTrips(processedTrips);
+      } catch (error) {
+        console.error("Error in fetchData:", error.message || error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // Filter trips based on search and filter
-  const filteredMyTrips = myTrips.filter(
+  const filteredTrips = trips.filter(
     (trip) =>
       trip.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      trip.description.toLowerCase().includes(searchTerm.toLowerCase())
+      trip.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const filteredOtherTrips = otherTrips.filter(
-    (trip) =>
-      trip.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      trip.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const myTrips = filteredTrips.filter(
+    (trip) => trip.user_id === currentUser?.id
+  );
+  const otherTrips = filteredTrips.filter(
+    (trip) => trip.user_id !== currentUser?.id
   );
 
-  // Limit to 3 trips per section for demo
-  const displayedMyTrips = filteredMyTrips.slice(0, 3);
-  const displayedOtherTrips = filteredOtherTrips.slice(0, 3);
+  // Limit to 3 trips per section for display
+  const displayedMyTrips = myTrips.slice(0, 3);
+  const displayedOtherTrips = otherTrips.slice(0, 3);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin text-yellow-500">↻</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -162,7 +121,7 @@ export default function TripListPage() {
             <p className="text-xs opacity-60">Track your adventures</p>
           </div>
           <span className="text-xs bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 px-2 py-1 rounded-full">
-            {filteredMyTrips.length + filteredOtherTrips.length} trips
+            {myTrips.length + otherTrips.length} trips
           </span>
         </div>
 
@@ -192,7 +151,7 @@ export default function TripListPage() {
             <h2 className="text-sm font-semibold opacity-70 uppercase tracking-wider">
               My Expeditions
             </h2>
-            {filteredMyTrips.length > 2 && (
+            {myTrips.length > 3 && (
               <Link
                 href="/trip/my"
                 className="text-xs flex items-center text-yellow-600 dark:text-yellow-400 font-medium"
@@ -227,7 +186,7 @@ export default function TripListPage() {
                 Create your first adventure
               </p>
               <Link
-                href="/trips/new"
+                href="/trip/add"
                 className="text-xs px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg inline-flex items-center gap-1"
               >
                 <Plus className="w-3 h-3" /> New Trip
@@ -242,7 +201,7 @@ export default function TripListPage() {
             <h2 className="text-sm font-semibold opacity-70 uppercase tracking-wider">
               Community Expeditions
             </h2>
-            {filteredOtherTrips.length > 3 && (
+            {otherTrips.length > 3 && (
               <Link
                 href="/trips/community"
                 className="text-xs flex items-center text-yellow-600 dark:text-yellow-400 font-medium"
@@ -274,18 +233,24 @@ export default function TripListPage() {
 function VerticalTripCard({ trip, isOwner }) {
   return (
     <Link
-      href={isOwner ? `/trip/my/${trip.id}` : `/trip/community/${trip.id}`}
+      href={`/trip/detail/${trip.id}`}
       className="group block w-[170px] flex-shrink-0"
     >
       <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-400 transition-colors shadow-sm hover:shadow-md">
         {/* Cover Image */}
         <div className="relative h-32">
-          <Image
-            src={trip.cover_photo}
-            alt={trip.title}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform"
-          />
+          {trip.cover_photo_url ? (
+            <Image
+              src={trip.cover_photo_url}
+              alt={trip.title}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+              <Compass className="w-8 h-8 text-gray-400" />
+            </div>
+          )}
           {isOwner && (
             <div className="absolute top-2 right-2 bg-yellow-500 text-black text-[10px] font-medium px-1.5 py-0.5 rounded-full">
               Yours
@@ -326,13 +291,19 @@ function HorizontalTripCard({ trip, isOwner }) {
       <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-400 transition-colors shadow-sm hover:shadow-md">
         <div className="flex">
           {/* Cover Image */}
-          <div className="relative w-1/4 h-auto flex-shrink-0">
-            <Image
-              src={trip.cover_photo}
-              alt={trip.title}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform"
-            />
+          <div className="relative w-1/4 h-24 flex-shrink-0">
+            {trip.cover_photo_url ? (
+              <Image
+                src={trip.cover_photo_url}
+                alt={trip.title}
+                fill
+                className="object-cover group-hover:scale-105 transition-transform"
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                <Compass className="w-6 h-6 text-gray-400" />
+              </div>
+            )}
             {isOwner && (
               <div className="absolute top-2 right-2 bg-yellow-500 text-black text-[10px] font-medium px-1.5 py-0.5 rounded-full">
                 Yours
@@ -346,22 +317,24 @@ function HorizontalTripCard({ trip, isOwner }) {
               <h2 className="font-semibold text-sm line-clamp-1 group-hover:text-yellow-500 dark:group-hover:text-yellow-400">
                 {trip.title}
               </h2>
-              <span className="text-xs opacity-60 flex items-center">
-                <Calendar className="w-3 h-3 mr-1" />
-                {new Date(trip.start_date).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                })}
-                {trip.end_date && (
-                  <>
-                    -{" "}
-                    {new Date(trip.end_date).toLocaleDateString("en-US", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                  </>
-                )}
-              </span>
+              {trip.start_date && (
+                <span className="text-xs opacity-60 flex items-center">
+                  <Calendar className="w-3 h-3 mr-1" />
+                  {new Date(trip.start_date).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  })}
+                  {trip.end_date && (
+                    <>
+                      -{" "}
+                      {new Date(trip.end_date).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </>
+                  )}
+                </span>
+              )}
             </div>
 
             <p className="text-xs opacity-60 line-clamp-2 mt-1">
@@ -376,9 +349,11 @@ function HorizontalTripCard({ trip, isOwner }) {
                 <MapPin className="w-2.5 h-2.5 mr-0.5" />
                 {trip.footprint_count} stops
               </span>
-              <span className="inline-flex items-center bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
-                {trip.photo_count} photos
-              </span>
+              {trip.photo_count && (
+                <span className="inline-flex items-center bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
+                  {trip.photo_count} photos
+                </span>
+              )}
             </div>
           </div>
         </div>

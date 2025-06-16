@@ -24,7 +24,7 @@ function LoginForm({ className }) {
         password,
       });
       if (authError) throw authError;
-      window.location.href = "/protected";
+      window.location.href = "/profile";
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
