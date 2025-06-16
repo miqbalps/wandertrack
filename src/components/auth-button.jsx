@@ -81,9 +81,12 @@ export default function AuthButton() {
 
   if (user) {
     return (
-      <div className="flex items-center gap-4">
-        Hey, {user.email}!
-        <button onClick={handleLogout} className="button-outline button-sm">
+      <div className="flex items-center gap-4 justify-between rounded-lg">
+        <span className="font-medium text-gray-700">Hey, {user.email}!</span>
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 bg-red-100 hover:bg-red-50 rounded-md transition-colors duration-200 cursor-pointer"
+        >
           Logout
         </button>
       </div>
@@ -91,12 +94,16 @@ export default function AuthButton() {
   }
 
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-4 justify-end">
       <Link href="/login">
-        <button className="button-outline button-sm">Sign in</button>
+        <button className="px-4 py-2 text-sm font-medium text-yellow-600 hover:text-yellow-700 bg-yellow-100 hover:bg-yellow-50 rounded-md transition-colors duration-200 cursor-pointer">
+          Sign in
+        </button>
       </Link>
       <Link href="/sign-up">
-        <button className="button-default button-sm">Sign up</button>
+        <button className="px-4 py-2 text-sm font-medium text-yellow-600 hover:text-yellow-700 bg-yellow-100 hover:bg-yellow-50 rounded-md transition-colors duration-200 cursor-pointer">
+          Sign up
+        </button>
       </Link>
     </div>
   );

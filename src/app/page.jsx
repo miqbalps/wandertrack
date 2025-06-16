@@ -1,10 +1,23 @@
 "use client";
 
-import Link from "next/link"; 
+import React, { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import Link from "next/link";
 import Image from "next/image";
-import React, { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { FaWhatsapp, FaFacebook, FaTwitter, FaTelegram, FaLink } from "react-icons/fa";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
+  FaWhatsapp,
+  FaFacebook,
+  FaTwitter,
+  FaTelegram,
+  FaLink,
+} from "react-icons/fa";
 import MapWrapper from "@/components/MapWrapper";
 
 import {
@@ -108,13 +121,123 @@ const trips = [
 ];
 
 export default function Page() {
+  const [trips, setTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedTrip, setSelectedTrip] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const supabase = createClient();
   const [darkMode, setDarkMode] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
 
   // const handleShare = (trip) => {
   //   alert(`Shared trip: ${trip.title}`)
   // }
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // First check for session
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          console.error("Session error:", sessionError.message);
+          // Continue without user - will show public trips only
+        }
+
+        if (session?.user) {
+          setCurrentUser(session.user);
+        }
+
+        // Fetch trips with tags, profiles, and footprints
+        const { data: tripsData, error: tripsError } = await supabase
+          .from("trips")
+          .select(
+            `
+            *,
+            trip_tags (
+              tags (
+                id,
+                name,
+                slug
+              )
+            ),
+            footprints (
+              id,
+              title,
+              location,
+              date,
+              cover_photo_url
+            )
+          `
+          )
+          .eq("is_public", true)
+          .order("created_at", { ascending: false })
+          .limit(2);
+
+        if (tripsError) {
+          console.error("Error fetching trips:", tripsError.message);
+          throw tripsError;
+        }
+
+        // Process the data
+        const processedTrips =
+          tripsData?.map((trip) => ({
+            ...trip,
+            username:
+              session?.user?.id === trip.user_id
+                ? "You"
+                : trip.profiles?.username || `user_${trip.user_id?.slice(-4)}`,
+            footprint_count: trip.footprints?.length || 0,
+            photo_count:
+              trip.footprints?.filter((f) => f.cover_photo_url).length || 0,
+            start_date: trip.start_date
+              ? new Date(trip.start_date).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })
+              : "No date",
+            locations:
+              trip.footprints?.map((f) => ({
+                name: f.title,
+                date: new Date(f.date).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                }),
+                location: f.location,
+              })) || [],
+            tags: trip.trip_tags?.map((tt) => tt.tags) || [],
+          })) || [];
+
+        setTrips(processedTrips);
+      } catch (error) {
+        console.error("Error in fetchData:", error.message || error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Set up real-time auth state listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setCurrentUser(session.user);
+      } else {
+        setCurrentUser(null);
+      }
+    });
+
+    fetchData();
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
 
   return (
     <>
@@ -127,6 +250,7 @@ export default function Page() {
           className="object-cover group-hover:scale-105 transition-transform duration-500"
           priority
         />
+
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex items-center px-6">
           <div className="animate-fade-in-up max-w-md">
             <h1 className="text-3xl font-bold text-white mb-3 leading-tight">
@@ -139,7 +263,10 @@ export default function Page() {
               Capture every moment with our adventure tools.
             </p>
             <div className="flex gap-3">
-              <Link href="#map-section" className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-full font-bold flex items-center gap-1.5 text-sm transform hover:scale-105 transition-transform">
+              <Link
+                href="#map-section"
+                className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-full font-bold flex items-center gap-1.5 text-sm transform hover:scale-105 transition-transform"
+              >
                 <MapPin className="w-4 h-4" /> Start Exploring
               </Link>
             </div>
@@ -147,59 +274,74 @@ export default function Page() {
         </div>
       </div>
 
-      {/* Trip Cards with hover effects */}
+      {/* Recent Trips Section */}
       <section className="px-4 py-6">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">
             <span className="border-b-4 border-yellow-400 pb-1">Recent</span>{" "}
             Trips
           </h2>
-          <button className="flex items-center text-yellow-600 hover:text-yellow-700 text-sm font-bold">
+          <Link
+            href="/trip"
+            className="flex items-center text-yellow-600 hover:text-yellow-700 text-sm font-bold"
+          >
             View All <ChevronRight className="w-4 h-4" />
-          </button>
+          </Link>
         </div>
 
-        <div className="grid gap-4">
-          {trips.map((trip) => (
-            <div
-              key={trip.id}
-              className="relative group overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => setSelectedTrip(trip)}
-            >
-              <div className="relative h-40">
-                <Image
-                  src={trip.cover_photo}
-                  alt={trip.title}
-                  fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
-                <div className="flex justify-between items-start">
-                  <h3 className="font-bold text-base">{trip.title}</h3>
-                  <span className="text-xs bg-black/50 px-2 py-0.5 rounded-full">
-                    {trip.start_date}
-                  </span>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin text-yellow-500">↻</div>
+          </div>
+        ) : trips.length > 0 ? (
+          <div className="grid gap-4">
+            {trips.map((trip) => (
+              <div
+                key={trip.id}
+                className="relative group overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => setSelectedTrip(trip)}
+              >
+                <div className="relative h-40">
+                  <Image
+                    src={trip.cover_photo_url || "/default-trip-cover.jpg"}
+                    alt={trip.title}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
                 </div>
-                <p className="text-xs line-clamp-2 mb-2">{trip.description}</p>
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex gap-2">
-                    <span className="flex items-center gap-1 bg-yellow-500/90 text-black px-2 py-0.5 rounded-full">
-                      <MapPin className="w-3 h-3" /> {trip.footprint_count}
-                    </span>
-                    <span className="flex items-center gap-1 bg-white/20 px-2 py-0.5 rounded-full">
-                      <Camera className="w-3 h-3" /> {trip.photo_count}
+                <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-bold text-base">{trip.title}</h3>
+                    <span className="text-xs bg-black/50 px-2 py-0.5 rounded-full">
+                      {trip.start_date}
                     </span>
                   </div>
-                  <span className="bg-black/50 px-2 py-0.5 rounded-full">
-                    @{trip.username}
-                  </span>
+                  <p className="text-xs line-clamp-2 mb-2">
+                    {trip.description}
+                  </p>
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex gap-2">
+                      <span className="flex items-center gap-1 bg-yellow-500/90 text-black px-2 py-0.5 rounded-full">
+                        <MapPin className="w-3 h-3" /> {trip.footprint_count}
+                      </span>
+                      <span className="flex items-center gap-1 bg-white/20 px-2 py-0.5 rounded-full">
+                        <Camera className="w-3 h-3" /> {trip.photo_count}
+                      </span>
+                    </div>
+                    <span className="bg-black/50 px-2 py-0.5 rounded-full">
+                      @{trip.username}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No trips found</p>
+          </div>
+        )}
       </section>
 
       {/* Interactive Map Section */}
@@ -218,8 +360,11 @@ export default function Page() {
           onTripSelect={setSelectedTrip}
           className="aspect-[4/3] mb-4"
         />
-        
-        <Link href="/trip" className="w-full py-2.5 bg-yellow-500 hover:bg-yellow-600 text-black rounded-full font-bold flex items-center justify-center gap-2 text-sm transform hover:scale-105 transition-transform mb-6">
+
+        <Link
+          href="/trip"
+          className="w-full py-2.5 bg-yellow-500 hover:bg-yellow-600 text-black rounded-full font-bold flex items-center justify-center gap-2 text-sm transform hover:scale-105 transition-transform mb-6"
+        >
           <Globe className="w-5 h-5" /> Explore World Maps
         </Link>
       </section>
@@ -244,7 +389,7 @@ export default function Page() {
 
             <div className="relative h-40 w-full mb-3 rounded-lg overflow-hidden">
               <Image
-                src={selectedTrip.cover_photo}
+                src={selectedTrip.cover_photo_url || "/default-trip-cover.jpg"}
                 alt={selectedTrip.title}
                 fill
                 className="object-cover"
@@ -253,27 +398,30 @@ export default function Page() {
 
             <p className="mb-3 text-sm">{selectedTrip.description}</p>
 
-            <div className="mb-4">
-              <h3 className="font-bold mb-2 text-sm">Trip Locations</h3>
-              <div className="space-y-2">
-                {selectedTrip.locations?.map((loc, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-                  >
-                    <div className="bg-yellow-500 text-black p-1.5 rounded-full">
-                      <MapPin className="w-4 h-4" />
+            {selectedTrip.locations?.length > 0 && (
+              <div className="mb-4">
+                <h3 className="font-bold mb-2 text-sm">Trip Locations</h3>
+                <div className="space-y-2">
+                  {selectedTrip.locations.map((loc, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
+                      <div className="bg-yellow-500 text-black p-1.5 rounded-full">
+                        <MapPin className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm">{loc.name}</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          {loc.location} • {loc.date}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-medium text-sm">{loc.name}</h4>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {loc.date}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
             <div className="flex justify-between items-center">
               <div className="flex gap-2">
                 <span className="flex items-center gap-1 bg-yellow-500/90 text-black px-2 py-1 rounded-full text-xs">
@@ -318,8 +466,10 @@ export default function Page() {
                 </a>
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(`https://example.com/trip/${selectedTrip.id}`)
-                    alert("Link copied!")
+                    navigator.clipboard.writeText(
+                      `https://example.com/trip/${selectedTrip.id}`
+                    );
+                    alert("Link copied!");
                   }}
                   className="text-gray-700 hover:scale-110 transition"
                 >

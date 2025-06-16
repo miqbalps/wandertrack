@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Header from "./Header";
-import BottomNav from "./BottomNav";
+import Header from "@/components/layouts/Header";
+import BottomNav from "@/components/layouts/BottomNav";
 import AuthButton from "@/components/auth-button";
 
 const fontFamily =
@@ -21,9 +21,9 @@ export default function AppLayout({ children }) {
     >
       <Header darkMode={darkMode} setDarkMode={setDarkMode} />
 
-      <div className="px-4 py-2">
+      {/* <div className="px-4 py-2">
         <AuthButton />
-      </div>
+      </div> */}
 
       <main className="relative">{children}</main>
 
