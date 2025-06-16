@@ -1,6 +1,4 @@
-// src/app/trip/my/page.js
 "use client";
-
 import Link from "next/link";
 import {
   Compass,
@@ -10,145 +8,153 @@ import {
   Plus,
   Search,
   Filter,
-  ArrowLeft, // Tambahkan ikon ArrowLeft untuk kembali
+  ChevronRight,
 } from "lucide-react";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { supabase, getSession } from "@/lib/supabase/client"; // Sesuaikan path jika berbeda
-
-// Re-gunakan komponen card yang sudah Anda definisikan
-// Pastikan path ke komponen VerticalTripCard sudah benar
-// Misalnya, jika VerticalTripCard berada di src/components/TripCards.js
-// Maka Anda perlu memindahkannya atau mengimpornya dari sana.
-// Untuk tujuan contoh ini, saya asumsikan TripCards.js ada di src/components
-// Jika Anda ingin tetap di file ini, salin saja definisi fungsi VerticalTripCard dan HorizontalTripCard di bawah TripListPage
-// Untuk menjaga agar kode tidak terlalu panjang, saya akan anggap VerticalTripCard diimpor atau didefinisikan di sini.
-
-// --- Definisi VerticalTripCard (Jika Anda tidak memindahkannya ke file terpisah) ---
-function VerticalTripCard({ trip, isOwner }) {
-    return (
-      <Link
-        href={`/trips/${trip.id}`} // Link ke halaman detail trip
-        className="group block w-[170px] flex-shrink-0"
-      >
-        <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-400 transition-colors shadow-sm hover:shadow-md">
-          {/* Cover Image */}
-          <div className="relative h-32">
-            <Image
-              src={trip.cover_photo || trip.cover_photo_url} // Menggunakan cover_photo_url dari Supabase
-              alt={trip.title}
-              fill
-              className="object-cover group-hover:scale-105 transition-transform"
-            />
-            {isOwner && (
-              <div className="absolute top-2 right-2 bg-yellow-500 text-black text-[10px] font-medium px-1.5 py-0.5 rounded-full">
-                Yours
-              </div>
-            )}
-          </div>
-
-          {/* Trip Info */}
-          <div className="p-3">
-            <h2 className="font-semibold text-sm line-clamp-1 group-hover:text-yellow-500 dark:group-hover:text-yellow-400">
-              {trip.title}
-            </h2>
-            <p className="text-xs opacity-60 line-clamp-2 mt-1">
-              {trip.description}
-            </p>
-
-            <div className="mt-2 flex flex-wrap gap-1 text-[10px]">
-              <span className="inline-flex items-center bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-1.5 py-0.5 rounded-full">
-                <User className="w-2.5 h-2.5 mr-0.5" />@{trip.username}
-              </span>
-              <span className="inline-flex items-center bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
-                <MapPin className="w-2.5 h-2.5 mr-0.5" />
-                {trip.footprint_count} stops
-              </span>
-            </div>
-          </div>
-        </div>
-      </Link>
-    );
-}
-// --- Akhir Definisi VerticalTripCard ---
-
+import { createClient } from "@/lib/supabase/client";
 
 export default function MyTripsPage() {
-  const [trips, setTrips] = useState([]);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentUserId, setCurrentUserId] = useState(null);
+  const [filter, setFilter] = useState("all");
+  const [trips, setTrips] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
+  const supabase = createClient();
 
   useEffect(() => {
-    async function fetchData() {
+    async function checkUser() {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
+        window.location.href = "/login";
+        return;
+      }
+
+      setUser(data.user);
+      setLoading(false);
+    }
+
+    checkUser();
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
       try {
-        setLoading(true);
-        const session = await getSession();
-        if (!session) {
-          // Handle case where user is not logged in
-          // Redirect to login or show a message
-          setError("You must be logged in to view your expeditions.");
-          setLoading(false);
-          return;
-        }
-        setCurrentUserId(session.user.id);
+        // First check for session
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
 
-        // Fetch trips from Supabase where user_id matches current user's ID
-        const { data, error } = await supabase
-          .from("trips") // Pastikan nama tabel Anda di Supabase adalah 'trips'
-          .select("*, users(username)") // Pilih semua kolom trip dan join untuk username dari tabel users
-          .eq("user_id", session.user.id) // Filter berdasarkan user_id yang sedang login
-          .order("created_at", { ascending: false }); // Urutkan berdasarkan tanggal pembuatan
-
-        if (error) {
-          throw error;
+        if (sessionError) {
+          console.error("Session error:", sessionError.message);
+          // Continue without user - will show public trips only
         }
 
-        // Map data agar sesuai dengan format yang diharapkan oleh VerticalTripCard
-        const formattedTrips = data.map(trip => ({
-            id: trip.id,
-            user_id: trip.user_id,
-            username: trip.users?.username || 'Unknown', // Ambil username dari join table users
-            title: trip.title,
-            description: trip.description,
-            start_date: trip.start_date,
-            end_date: trip.end_date,
-            footprint_count: trip.footprint_count || 0, // Beri default jika null
-            photo_count: trip.photo_count || 0, // Beri default jika null
-            cover_photo: trip.cover_photo_url, // Sesuaikan dengan nama kolom di Supabase
-        }));
+        if (session?.user) {
+          setCurrentUser(session.user);
+        }
 
-        setTrips(formattedTrips);
-      } catch (err) {
-        console.error("Error fetching trips:", err.message);
-        setError("Failed to load your expeditions: " + err.message);
+        // Fetch trips with tags and footprints count
+        const { data: tripsData, error: tripsError } = await supabase
+          .from("trips")
+          .select(
+            `
+            *,
+            trip_tags (
+              tags (
+                id,
+                name,
+                slug
+              )
+            ),
+            footprints (
+              id
+            )
+          `
+          )
+          .eq("is_public", true)
+          .order("created_at", { ascending: false });
+
+        if (tripsError) {
+          console.error("Error fetching trips:", tripsError.message);
+          throw tripsError;
+        }
+
+        // Process the data to match our component needs
+        const processedTrips =
+          tripsData?.map((trip) => ({
+            ...trip,
+            username:
+              session?.user?.id === trip.user_id
+                ? "You"
+                : `user_${trip.user_id?.slice(-8) || "anonymous"}`,
+            footprint_count: trip.footprints?.length || 0,
+            tags: trip.trip_tags?.map((tt) => tt.tags) || [],
+          })) || [];
+
+        setTrips(processedTrips);
+      } catch (error) {
+        console.error("Error in fetchData:", error.message || error);
       } finally {
         setLoading(false);
       }
-    }
+    };
+
+    // Set up real-time auth state listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setCurrentUser(session.user);
+      } else {
+        setCurrentUser(null);
+      }
+    });
 
     fetchData();
-  }, []); // [] agar hanya dijalankan sekali saat komponen di-mount
 
+    // Cleanup subscription on unmount
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
+
+  if (loading) return <div>Loading...</div>;
+
+  // Filter trips based on search and filter
   const filteredTrips = trips.filter(
     (trip) =>
       trip.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      trip.description.toLowerCase().includes(searchTerm.toLowerCase())
+      trip.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const myTrips = filteredTrips.filter(
+    (trip) => trip.user_id === currentUser?.id
+  );
+
+  // Limit to 3 trips per section for display
+  const displayedMyTrips = myTrips.slice(0, 12);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin text-yellow-500">↻</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
       {/* Page Header */}
       <header className="px-4 pt-4 pb-2">
-        <div className="flex items-center mb-3">
-          <Link href="/trip" className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700">
-            <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          </Link>
-          <div className="ml-3">
-            <h1 className="text-xl font-bold">My Expeditions</h1>
-            <p className="text-xs opacity-60">All your created adventures</p>
-          </div>
+        <div className="flex justify-between items-center mb-3">
+          <h2 className="text-sm font-semibold opacity-70 uppercase tracking-wider">
+            My Expeditions
+          </h2>
         </div>
 
         {/* Search and Filter */}
@@ -157,7 +163,7 @@ export default function MyTripsPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Search your trips..."
+              placeholder="Search..."
               className="w-full pl-10 pr-4 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-yellow-500 bg-white/50 dark:bg-gray-800/50"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -171,42 +177,83 @@ export default function MyTripsPage() {
 
       {/* Trip List */}
       <main className="px-4 pb-16">
-        {loading && (
-          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-            Loading your expeditions...
-          </div>
-        )}
-
-        {error && (
-          <div className="text-center py-8 text-red-500 dark:text-red-400">
-            Error: {error}
-          </div>
-        )}
-
-        {!loading && !error && filteredTrips.length === 0 && (
-          <div className="text-center py-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-            <Compass className="mx-auto w-6 h-6 text-gray-300 dark:text-gray-600 mb-2" />
-            <h3 className="text-sm font-medium mb-1">No trips found</h3>
-            <p className="text-xs opacity-60 mb-3">
-              You haven't created any expeditions yet.
-            </p>
-            <Link
-              href="/trips/new"
-              className="text-xs px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg inline-flex items-center gap-1"
-            >
-              <Plus className="w-3 h-3" /> New Trip
-            </Link>
-          </div>
-        )}
-
-        {!loading && !error && filteredTrips.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {filteredTrips.map((trip) => (
-              <VerticalTripCard key={trip.id} trip={trip} isOwner={true} />
-            ))}
-          </div>
-        )}
+        {/* My Trips Section */}
+        <section className="mb-6">
+          {displayedMyTrips.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {displayedMyTrips.map((trip) => (
+                <VerticalTripCard key={trip.id} trip={trip} isOwner={true} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+              <Compass className="mx-auto w-6 h-6 text-gray-300 dark:text-gray-600 mb-2" />
+              <h3 className="text-sm font-medium mb-1">No trips found</h3>
+              <p className="text-xs opacity-60 mb-3">
+                Create your first adventure
+              </p>
+              <Link
+                href="/trip/add"
+                className="text-xs px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg inline-flex items-center gap-1"
+              >
+                <Plus className="w-3 h-3" /> New Trip
+              </Link>
+            </div>
+          )}
+        </section>
       </main>
     </div>
+  );
+}
+
+function VerticalTripCard({ trip, isOwner }) {
+  return (
+    <Link
+      href={`/trip/detail/${trip.id}`}
+      className="group block w-full flex-shrink-0"
+    >
+      <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-400 transition-colors shadow-sm hover:shadow-md h-[280px] flex flex-col">
+        {/* Cover Image */}
+        <div className="relative h-[140px] w-full">
+          {trip.cover_photo_url ? (
+            <Image
+              src={trip.cover_photo_url}
+              alt={trip.title}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform"
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+              <Compass className="w-8 h-8 text-gray-400" />
+            </div>
+          )}
+          {isOwner && (
+            <div className="absolute top-2 right-2 bg-yellow-500 text-black text-[10px] font-medium px-1.5 py-0.5 rounded-full">
+              Yours
+            </div>
+          )}
+        </div>
+
+        {/* Trip Info */}
+        <div className="p-3 flex-1 flex flex-col">
+          <h2 className="font-semibold text-sm line-clamp-1 group-hover:text-yellow-500 dark:group-hover:text-yellow-400">
+            {trip.title}
+          </h2>
+          <p className="text-xs opacity-60 line-clamp-2 mt-1 flex-grow">
+            {trip.description}
+          </p>
+
+          <div className="mt-2 flex flex-wrap gap-1 text-[10px]">
+            <span className="inline-flex items-center bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 px-1.5 py-0.5 rounded-full">
+              <User className="w-2.5 h-2.5 mr-0.5" />@{trip.username}
+            </span>
+            <span className="inline-flex items-center bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded-full">
+              <MapPin className="w-2.5 h-2.5 mr-0.5" />
+              {trip.footprint_count} stops
+            </span>
+          </div>
+        </div>
+      </div>
+    </Link>
   );
 }

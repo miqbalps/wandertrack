@@ -18,6 +18,8 @@ import Image from "next/image";
 export default function AddTripPage() {
   const router = useRouter();
   const supabase = createClient();
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -32,6 +34,23 @@ export default function AddTripPage() {
   const [availableTags, setAvailableTags] = useState([]);
   const [showAddTag, setShowAddTag] = useState(false);
   const [newTag, setNewTag] = useState({ name: "", slug: "" });
+
+  useEffect(() => {
+    async function checkUser() {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
+        window.location.href = "/login";
+        return;
+      }
+
+      setUser(data.user);
+      setLoading(false);
+    }
+
+    checkUser();
+  }, []);
 
   const handleCreateTag = async (e) => {
     e.preventDefault();
