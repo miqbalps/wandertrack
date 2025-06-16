@@ -23,7 +23,7 @@ export default function AddTripPage() {
     description: "",
     start_date: "",
     end_date: "",
-    cover_photo: null,
+    cover_photo_url: null,
     is_public: true,
     tags: [],
   });
@@ -58,7 +58,7 @@ export default function AddTripPage() {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setFormData((prev) => ({ ...prev, cover_photo: file }));
+      setFormData((prev) => ({ ...prev, cover_photo_url: file }));
       setPreviewImage(URL.createObjectURL(file));
     }
   };
@@ -91,12 +91,12 @@ export default function AddTripPage() {
     try {
       // Upload gambar ke Supabase Storage
       let coverPhotoUrl = null;
-      if (formData.cover_photo) {
-        const fileExt = formData.cover_photo.name.split(".").pop();
+      if (formData.cover_photo_url) {
+        const fileExt = formData.cover_photo_url.name.split(".").pop();
         const fileName = `${Math.random()}.${fileExt}`;
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("trip-photos")
-          .upload(fileName, formData.cover_photo);
+          .upload(fileName, formData.cover_photo_url);
 
         if (uploadError) {
           console.error("Upload image error:", uploadError);
@@ -114,7 +114,7 @@ export default function AddTripPage() {
       // Dapatkan user yang sedang login
       const {
         data: { user },
-        error: userError
+        error: userError,
       } = await supabase.auth.getUser();
 
       if (userError) {
@@ -128,7 +128,9 @@ export default function AddTripPage() {
       }
 
       console.log("User login:", user.id);
-      console.log("Form data sebelum insert trip:", {
+
+      // Prepare trip data with created_at
+      const tripData = {
         title: formData.title,
         description: formData.description,
         start_date: formData.start_date,
@@ -136,22 +138,15 @@ export default function AddTripPage() {
         cover_photo_url: coverPhotoUrl,
         is_public: formData.is_public,
         user_id: user.id,
-      });
+        created_at: new Date().toISOString(), // Add created_at timestamp
+      };
+
+      console.log("Form data sebelum insert trip:", tripData);
 
       // Insert data trip ke database
       const { data: trip, error: tripError } = await supabase
         .from("trips")
-        .insert([
-          {
-            title: formData.title,
-            description: formData.description,
-            start_date: formData.start_date,
-            end_date: formData.end_date,
-            cover_photo_url: coverPhotoUrl,
-            is_public: formData.is_public,
-            user_id: user.id,
-          },
-        ])
+        .insert([tripData])
         .select()
         .single();
 
@@ -164,20 +159,34 @@ export default function AddTripPage() {
 
       // Insert trip tags
       if (formData.tags.length > 0) {
-        const { error: tagError } = await supabase.from("trip_tags").insert(
-          formData.tags.map((tagId) => ({
-            trip_id: trip.id,
-            tag_id: tagId,
-          }))
-        );
+        const tripTagsData = formData.tags.map((tagId) => ({
+          trip_id: trip.id,
+          tag_id: tagId,
+        }));
 
-        if (tagError) throw tagError;
+        const { error: tagError } = await supabase
+          .from("trip_tags")
+          .insert(tripTagsData);
+
+        if (tagError) {
+          console.error("Trip tags insert error:", tagError);
+          throw tagError;
+        }
       }
 
-      router.push("/trips");
+      // Redirect to trips page
+      router.push("/trip");
     } catch (error) {
       console.error("Error creating trip:", error);
-      alert("Failed to create trip. Please try again.");
+
+      // More specific error handling
+      if (error.message.includes("duplicate key")) {
+        alert("A trip with this information already exists.");
+      } else if (error.message.includes("foreign key")) {
+        alert("Invalid user or tag reference. Please try again.");
+      } else {
+        alert(`Failed to create trip: ${error.message}`);
+      }
     } finally {
       setIsSubmitting(false);
     }

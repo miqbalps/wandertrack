@@ -14,7 +14,7 @@ export default function AppLayout({ children }) {
 
   return (
     <div
-      className={`min-h-screen max-w-[500px] mx-auto overflow-x-hidden relative pb-16 ${
+      className={`min-h-screen max-w-[500px] md:max-w-[720px] mx-auto overflow-x-hidden relative pb-16 ${
         darkMode ? "bg-gray-950 text-white" : "bg-white text-gray-900"
       }`}
       style={{ fontFamily }}
