@@ -51,11 +51,12 @@
 //   document.querySelector("#auth-button-container").appendChild(authButton);
 // });
 
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client'; // pastikan path ini benar
-import Link from 'next/link';
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+// import { supabase } from "@/lib/supabase/client";
+import Link from "next/link";
 
 export default function AuthButton() {
   const [user, setUser] = useState(null);

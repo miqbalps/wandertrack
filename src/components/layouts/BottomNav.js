@@ -12,16 +12,16 @@ export default function BottomNav({ activeTab, setActiveTab, darkMode }) {
 
   return (
     <nav
-      className={`fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto flex justify-around items-center py-3 px-4 ${
+      className={`fixed bottom-0 left-0 right-0 max-w-[500px] rounded-t-xl md:rounded-t-3xl mx-auto flex justify-around items-center py-3 px-4 ${
         darkMode
-          ? "bg-gray-950/95 backdrop-blur border-t border-gray-700"
-          : "bg-white/95 backdrop-blur border-t border-gray-200"
+          ? "bg-gray-950/95 backdrop-blur border border-b-0  border-gray-700"
+          : "bg-white/95 backdrop-blur border border-b-0 border-gray-200"
       }`}
     >
       <Link
         href={"/"}
         onClick={() => setActiveTab("home")}
-        className={`flex flex-col items-center p-2 relative ${
+        className={`flex flex-col items-center p-2 relative hover:text-yellow-500 ${
           isActive("/") ? "text-yellow-500" : "text-gray-500" // Gunakan isActive
         }`}
       >
@@ -42,7 +42,7 @@ export default function BottomNav({ activeTab, setActiveTab, darkMode }) {
       <Link
         href={"/trip"} // Asumsi '/trip' adalah halaman explore Anda
         onClick={() => setActiveTab("explore")}
-        className={`flex flex-col items-center p-2 relative ${
+        className={`flex flex-col items-center p-2 relative hover:text-yellow-500 ${
           isActive("/trip") ? "text-yellow-500" : "text-gray-500" // Gunakan isActive
         }`}
       >
@@ -75,7 +75,7 @@ export default function BottomNav({ activeTab, setActiveTab, darkMode }) {
       <Link
         href={"/plan"} // <--- PENTING: Ubah path ini ke halaman Plan yang baru Anda buat
         onClick={() => setActiveTab("plan")}
-        className={`flex flex-col items-center p-2 relative ${
+        className={`flex flex-col items-center p-2 relative hover:text-yellow-500 ${
           isActive("/plan") ? "text-yellow-500" : "text-gray-500" // Gunakan isActive
         }`}
       >
@@ -96,7 +96,7 @@ export default function BottomNav({ activeTab, setActiveTab, darkMode }) {
       <Link
         href={"/profile"} // Asumsi '/profile' adalah halaman profile Anda
         onClick={() => setActiveTab("profile")}
-        className={`flex flex-col items-center p-2 relative ${
+        className={`flex flex-col items-center p-2 relative hover:text-yellow-500 ${
           isActive("/profile") ? "text-yellow-500" : "text-gray-500" // Gunakan isActive
         }`}
       >

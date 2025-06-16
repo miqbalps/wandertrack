@@ -2,6 +2,11 @@
 
 import Link from "next/link"; 
 import Image from "next/image";
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { FaWhatsapp, FaFacebook, FaTwitter, FaTelegram, FaLink } from "react-icons/fa";
+import MapWrapper from "@/components/MapWrapper";
+
 import {
   Camera,
   MapPin,
@@ -11,9 +16,10 @@ import {
   Share2,
   X,
   ChevronRight,
+  User,
+  Users,
 } from "lucide-react";
-import { useState } from "react";
-import MapWrapper from "@/components/MapWrapper";
+
 // import ShareOptionsModal from "@/components/share/ShareOptionsModal";
 
 // Sample trip data with coordinates for mapping
@@ -104,7 +110,11 @@ const trips = [
 export default function Page() {
   const [selectedTrip, setSelectedTrip] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
-  // const [showShareModal, setShowShareModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+
+  // const handleShare = (trip) => {
+  //   alert(`Shared trip: ${trip.title}`)
+  // }
 
   return (
     <>
@@ -131,9 +141,6 @@ export default function Page() {
             <div className="flex gap-3">
               <Link href="#map-section" className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-full font-bold flex items-center gap-1.5 text-sm transform hover:scale-105 transition-transform">
                 <MapPin className="w-4 h-4" /> Start Exploring
-              </Link>
-              <Link href="/trip" className="px-4 py-2 border-2 border-white text-white hover:bg-white/10 rounded-full font-bold flex items-center gap 1.5 text-sm transform hover:scale-105 transition-transform">
-                <BookOpen className="w-4 h-4" /> Read Stories
               </Link>
             </div>
           </div>
@@ -211,10 +218,10 @@ export default function Page() {
           onTripSelect={setSelectedTrip}
           className="aspect-[4/3] mb-4"
         />
-
-        <button className="w-full py-2.5 bg-yellow-500 hover:bg-yellow-600 text-black rounded-full font-bold flex items-center justify-center gap-2 text-sm transform hover:scale-105 transition-transform mb-6">
+        
+        <Link href="/trip" className="w-full py-2.5 bg-yellow-500 hover:bg-yellow-600 text-black rounded-full font-bold flex items-center justify-center gap-2 text-sm transform hover:scale-105 transition-transform mb-6">
           <Globe className="w-5 h-5" /> Explore World Maps
-        </button>
+        </Link>
       </section>
 
       {/* Trip Detail Modal */}
@@ -267,7 +274,6 @@ export default function Page() {
                 ))}
               </div>
             </div>
-
             <div className="flex justify-between items-center">
               <div className="flex gap-2">
                 <span className="flex items-center gap-1 bg-yellow-500/90 text-black px-2 py-1 rounded-full text-xs">
@@ -277,9 +283,49 @@ export default function Page() {
                   <Camera className="w-3 h-3" /> {selectedTrip.photo_count}
                 </span>
               </div>
-              <button className="p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-                <Share2 className="w-4 h-4" />
-              </button>
+              <div className="flex gap-2 ml-auto">
+                <a
+                  href={`https://wa.me/?text=Check out this trip: ${selectedTrip.title}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-green-500 hover:scale-110 transition"
+                >
+                  <FaWhatsapp className="w-5 h-5" />
+                </a>
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=https://example.com/trip/${selectedTrip.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:scale-110 transition"
+                >
+                  <FaFacebook className="w-5 h-5" />
+                </a>
+                <a
+                  href={`https://twitter.com/intent/tweet?text=Check out this trip: ${selectedTrip.title}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:scale-110 transition"
+                >
+                  <FaTwitter className="w-5 h-5" />
+                </a>
+                <a
+                  href={`https://t.me/share/url?url=https://example.com/trip/${selectedTrip.id}&text=Check out this trip!`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:scale-110 transition"
+                >
+                  <FaTelegram className="w-5 h-5" />
+                </a>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`https://example.com/trip/${selectedTrip.id}`)
+                    alert("Link copied!")
+                  }}
+                  className="text-gray-700 hover:scale-110 transition"
+                >
+                  <FaLink className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
         </div>

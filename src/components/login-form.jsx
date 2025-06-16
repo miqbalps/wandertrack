@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+// import { supabase } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { Compass, User, Lock, MailCheck } from "lucide-react";
 
@@ -23,7 +24,7 @@ function LoginForm({ className }) {
         password,
       });
       if (authError) throw authError;
-      window.location.href = "/protected";
+      window.location.href = "/profile";
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
