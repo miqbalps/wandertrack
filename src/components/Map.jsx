@@ -1,8 +1,8 @@
-// MapComponent.js
+// Map.js
 "use client";
 
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -23,18 +23,11 @@ const setupLeafletIcons = () => {
     shadowSize: [41, 41],
   });
 
-  const wastePointIcon = new L.Icon({
-    iconUrl: "/images/waste-marker.png",
-    shadowUrl: "/images/marker-shadow.png",
-    iconSize: [25, 41],
-    iconAnchor: [12, 41],
-    popupAnchor: [1, -34],
-    shadowSize: [41, 41],
-  });
-
-  const userLocationIcon = new L.Icon({
-    iconUrl: "/images/user-marker.png",
-    shadowUrl: "/images/marker-shadow.png",
+  const footprintIcon = new L.Icon({
+    iconUrl:
+      "https://raw.githubusercontent.com/Leaflet/Leaflet/a01d0a91689554091498368ae184ba4cde5d395a/src/images/marker-icon.svg",
+    shadowUrl:
+      "https://raw.githubusercontent.com/Leaflet/Leaflet/a01d0a91689554091498368ae184ba4cde5d395a/src/images/marker-shadow.svg",
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
@@ -42,12 +35,34 @@ const setupLeafletIcons = () => {
   });
 
   return {
-    wastePointIcon,
-    userLocationIcon,
+    footprintIcon,
   };
 };
 
-const Map = ({ locations = [], onMarkerClick, className = "" }) => {
+// Component to handle map clicks
+const MapClickHandler = ({ onMapClick }) => {
+  useMapEvents({
+    click: (e) => {
+      if (onMapClick) {
+        onMapClick({
+          lat: e.latlng.lat,
+          lng: e.latlng.lng,
+        });
+      }
+    },
+  });
+  return null;
+};
+
+const Map = ({
+  locations = [],
+  onMarkerClick,
+  onMapClick,
+  className = "",
+  center = null,
+  zoom = 2,
+  clickable = false,
+}) => {
   const [icons, setIcons] = useState(null);
 
   useEffect(() => {
@@ -55,7 +70,8 @@ const Map = ({ locations = [], onMarkerClick, className = "" }) => {
   }, []);
 
   const calculateCenter = () => {
-    if (!locations?.length) return [20, 0];
+    if (center) return center;
+    if (!locations?.length) return [-6.9175, 107.6191]; // Default to Bandung
 
     const avgLat =
       locations.reduce((sum, loc) => sum + loc.lat, 0) / locations.length;
@@ -65,10 +81,16 @@ const Map = ({ locations = [], onMarkerClick, className = "" }) => {
     return [avgLat, avgLng];
   };
 
+  const getZoomLevel = () => {
+    if (locations?.length === 1) return 15;
+    if (locations?.length > 1) return 10;
+    return zoom;
+  };
+
   return (
     <MapContainer
       center={calculateCenter()}
-      zoom={2}
+      zoom={getZoomLevel()}
       style={{ height: "100%", width: "100%" }}
       className={`z-0 ${className}`}
     >
@@ -77,11 +99,16 @@ const Map = ({ locations = [], onMarkerClick, className = "" }) => {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
 
+      {clickable && <MapClickHandler onMapClick={onMapClick} />}
+
       {locations?.map((location, idx) => (
         <Marker
           key={`location-${idx}`}
           position={[location.lat, location.lng]}
-          eventHandlers={{ click: () => onMarkerClick?.(location) }}
+          icon={icons?.footprintIcon}
+          eventHandlers={{
+            click: () => onMarkerClick?.(location),
+          }}
         />
       ))}
     </MapContainer>

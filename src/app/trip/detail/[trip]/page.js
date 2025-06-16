@@ -76,6 +76,13 @@ export default function TripDetailPage() {
     }
   };
 
+  const handleFootprintDelete = (deletedFootprintId) => {
+    // Update footprints state by filtering out the deleted one
+    setFootprints((currentFootprints) =>
+      currentFootprints.filter((f) => f.id !== deletedFootprintId)
+    );
+  };
+
   useEffect(() => {
     const fetchTripDetail = async () => {
       const supabase = createClient();
@@ -410,6 +417,19 @@ export default function TripDetailPage() {
       <main className="px-4 py-6 pb-20">
         {activeTab === "footprints" && (
           <div className="space-y-4">
+            {/* Add Footprint Button - Always shown for owner */}
+            {isOwner && (
+              <div className="mb-4">
+                <Link
+                  href={`/trip/detail/${trip.id}/footprint/add`}
+                  className="inline-flex items-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg text-sm font-medium transition-colors"
+                >
+                  <MapPin className="w-4 h-4 mr-2" />
+                  Add Footprint
+                </Link>
+              </div>
+            )}
+
             {footprints.length > 0 ? (
               footprints.map((footprint, index) => (
                 <FootprintCard
@@ -417,24 +437,17 @@ export default function TripDetailPage() {
                   footprint={footprint}
                   index={index}
                   isOwner={isOwner}
+                  tripId={params.trip}
+                  onDelete={handleFootprintDelete}
                 />
               ))
             ) : (
               <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
                 <MapPin className="mx-auto w-8 h-8 text-gray-300 dark:text-gray-600 mb-3" />
                 <h3 className="text-lg font-medium mb-2">No footprints yet</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   Start adding locations to your journey
                 </p>
-                {isOwner && (
-                  <Link
-                    href={`/trip/detail/${trip.id}/footprint/add`}
-                    className="inline-flex items-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg text-sm font-medium transition-colors"
-                  >
-                    <MapPin className="w-4 h-4 mr-2" />
-                    Add Footprint
-                  </Link>
-                )}
               </div>
             )}
           </div>
@@ -516,74 +529,113 @@ export default function TripDetailPage() {
   );
 }
 
-function FootprintCard({ footprint, index, isOwner }) {
+function FootprintCard({ footprint, index, isOwner, tripId, onDelete }) {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const supabase = createClient();
+
+  const handleDelete = async (footprintId) => {
+    if (!isOwner || !footprintId) return;
+
+    if (!confirm("Are you sure you want to delete this footprint?")) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      // Delete the footprint
+      const { error } = await supabase
+        .from("footprints")
+        .delete()
+        .eq("id", footprintId);
+
+      if (error) throw error;
+
+      // Call parent callback to update UI
+      onDelete(footprintId);
+    } catch (error) {
+      console.error("Error deleting footprint:", error);
+      alert("Failed to delete footprint. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-      <div className="p-4">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center">
-            <div className="w-8 h-8 bg-yellow-500 text-black rounded-full flex items-center justify-center text-sm font-bold mr-3">
-              {index + 1}
-            </div>
-            <div>
-              <h3 className="font-semibold text-base">{footprint.title}</h3>
-              <div className="flex items-center text-sm text-gray-500 dark:text-gray-400 mt-1">
-                <MapPin className="w-3 h-3 mr-1" />
-                <span>{footprint.location || "Location not specified"}</span>
-              </div>
-            </div>
+    <div className="relative group overflow-hidden rounded-lg shadow-md hover:shadow-lg transition-shadow">
+      <div className="relative h-40">
+        {footprint.cover_photo_url ? (
+          <>
+            <Image
+              src={footprint.cover_photo_url}
+              alt={footprint.title}
+              fill
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
+          </>
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">
+            <MapPin className="w-16 h-16 text-white" />
           </div>
-          {isOwner && (
-            <button className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors">
-              <Edit className="w-4 h-4 text-gray-400" />
+        )}
+
+        {/* Update the delete button */}
+        {isOwner && (
+          <div className="absolute top-2 right-2 flex gap-2">
+            <Link
+              href={`/trip/detail/${tripId}/footprint/edit/${footprint.id}`}
+              className="p-1.5 bg-white/90 hover:bg-yellow-500 hover:text-black rounded-lg transition-colors backdrop-blur-sm"
+            >
+              <Edit className="w-4 h-4" />
+            </Link>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(footprint.id);
+              }}
+              disabled={isDeleting}
+              className="p-1.5 bg-white/90 hover:bg-red-500 hover:text-white rounded-lg transition-colors backdrop-blur-sm disabled:opacity-50"
+            >
+              {isDeleting ? (
+                <span className="animate-spin">↻</span>
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
             </button>
-          )}
-        </div>
-
-        {footprint.description && (
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 leading-relaxed">
-            {footprint.description}
-          </p>
-        )}
-
-        {footprint.photos && footprint.photos.length > 0 && (
-          <div className="grid grid-cols-3 gap-2 mb-3">
-            {footprint.photos.slice(0, 3).map((photo, photoIndex) => (
-              <div
-                key={photoIndex}
-                className="aspect-square relative rounded-lg overflow-hidden"
-              >
-                <Image
-                  src={photo.url}
-                  alt={`${footprint.title} photo ${photoIndex + 1}`}
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            ))}
           </div>
         )}
 
-        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-          <div className="flex items-center">
-            <Clock className="w-3 h-3 mr-1" />
-            <span>
-              {footprint.visited_at
-                ? new Date(footprint.visited_at).toLocaleDateString("en-US", {
-                    month: "short",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
-                : "Date not specified"}
+        {/* Footprint details overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-yellow-500 text-black rounded-full flex items-center justify-center text-sm font-bold">
+                {index + 1}
+              </div>
+              <h3 className="font-bold text-base">{footprint.title}</h3>
+            </div>
+            <span className="text-xs bg-black/50 px-2 py-0.5 rounded-full">
+              {new Date(footprint.date).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              })}
             </span>
           </div>
-          {footprint.rating && (
-            <div className="flex items-center">
-              <Star className="w-3 h-3 mr-1 text-yellow-500 fill-current" />
-              <span>{footprint.rating}/5</span>
-            </div>
+
+          {footprint.description && (
+            <p className="text-xs line-clamp-2 mb-2 mt-1">
+              {footprint.description}
+            </p>
           )}
+
+          <div className="flex items-center justify-between text-xs">
+            <div className="flex items-center gap-1">
+              <MapPin className="w-3 h-3 text-yellow-500" />
+              <span className="text-white/90">
+                {footprint.location || "Location not specified"}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
