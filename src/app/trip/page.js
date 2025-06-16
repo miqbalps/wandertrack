@@ -20,11 +20,10 @@ export default function TripListPage() {
   const [trips, setTrips] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const supabase = createClient();
 
   useEffect(() => {
     const fetchData = async () => {
-      const supabase = createClient();
-
       try {
         // First check for session
         const {
@@ -312,7 +311,7 @@ function HorizontalTripCard({ trip, isOwner }) {
       <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-400 transition-colors shadow-sm hover:shadow-md">
         <div className="flex">
           {/* Cover Image */}
-          <div className="relative w-1/4 h-24 flex-shrink-0">
+          <div className="relative w-1/4 h-auto flex-shrink-0">
             {trip.cover_photo_url ? (
               <Image
                 src={trip.cover_photo_url}
