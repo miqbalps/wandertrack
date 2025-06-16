@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -11,9 +11,28 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUser = async () => {
+    async function checkUser() {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
+        window.location.href = "/login";
+        return;
+      }
+
+      setUser(data.user);
+      setLoading(false);
+    }
+
+    checkUser();
+  }, []);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const supabase = await createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUser(user);
     };
     fetchUser();

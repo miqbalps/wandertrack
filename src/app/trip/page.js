@@ -15,12 +15,30 @@ import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function TripListPage() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("all");
   const [trips, setTrips] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
   const supabase = createClient();
+
+  useEffect(() => {
+    async function checkUser() {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
+        window.location.href = "/login";
+        return;
+      }
+
+      setUser(data.user);
+      setLoading(false);
+    }
+
+    checkUser();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -105,6 +123,8 @@ export default function TripListPage() {
     };
   }, []);
 
+  if (loading) return <div>Loading...</div>;
+
   // Filter trips based on search and filter
   const filteredTrips = trips.filter(
     (trip) =>
@@ -120,8 +140,8 @@ export default function TripListPage() {
   );
 
   // Limit to 3 trips per section for display
-  const displayedMyTrips = myTrips.slice(0, 3);
-  const displayedOtherTrips = otherTrips.slice(0, 3);
+  const displayedMyTrips = myTrips.slice(0, 5);
+  const displayedOtherTrips = otherTrips.slice(0, 5);
 
   if (loading) {
     return (
@@ -223,7 +243,7 @@ export default function TripListPage() {
             </h2>
             {otherTrips.length > 3 && (
               <Link
-                href="/trips/community"
+                href="/trip/community"
                 className="text-xs flex items-center text-yellow-600 dark:text-yellow-400 font-medium"
               >
                 View All <ChevronRight className="w-3 h-3" />
@@ -254,11 +274,11 @@ function VerticalTripCard({ trip, isOwner }) {
   return (
     <Link
       href={`/trip/detail/${trip.id}`}
-      className="group block w-[170px] flex-shrink-0"
+      className="group block w-[180px] flex-shrink-0"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-400 transition-colors shadow-sm hover:shadow-md">
+      <div className="bg-white dark:bg-gray-800 rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 hover:border-yellow-400 dark:hover:border-yellow-400 transition-colors shadow-sm hover:shadow-md h-[240px]">
         {/* Cover Image */}
-        <div className="relative h-32">
+        <div className="relative h-[120px] w-full">
           {trip.cover_photo_url ? (
             <Image
               src={trip.cover_photo_url}
