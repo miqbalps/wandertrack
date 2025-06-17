@@ -215,10 +215,10 @@ export default function MapPage() {
           <GlobalMap
             trips={userTripsForMap}
             onFootprintSelect={setSelectedFootprint}
-            className="aspect-[4/4] mb-4"
+            className="mb-4"
           />
         ) : (
-          <div className="aspect-[4/4] mb-4 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+          <div className="h-[calc(100vh-64px)] bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
             <Link
               href="/login"
               className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-full font-bold flex items-center gap-1.5 text-sm"
