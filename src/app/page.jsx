@@ -352,7 +352,7 @@ export default function Page() {
             className="mb-4"
           />
         ) : (
-          <div className="aspect-[2 /1] mb-4 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+          <div className="aspect-[2/1] mb-4 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
             <Link
               href="/login"
               className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-full font-bold flex items-center gap-1.5 text-sm"
