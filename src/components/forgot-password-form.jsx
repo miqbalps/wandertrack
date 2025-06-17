@@ -14,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useState } from "react";
 
 function ForgotPasswordForm({ className, ...props }) {
   const [email, setEmail] = useState("");
