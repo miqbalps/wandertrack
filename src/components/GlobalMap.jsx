@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
 
 // Dynamic import of Map component to avoid SSR issues
-const Map = dynamic(() => import("./Map"), { ssr: false });
+const Map = dynamic(() => import("./Map2"), { ssr: false });
 
 export default function MapHome({
   trips = [],
@@ -72,7 +72,7 @@ export default function MapHome({
         locations={locations}
         onMarkerClick={handleMarkerClick}
         showPopup={true}
-        className={""}
+        className="rounded-none shadow-none"
         zoom={2}
       />
     </div>

@@ -286,7 +286,7 @@ export default function EditFootprintPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-gray-950">
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8 max-w-2xl pb-16">
+      <main className="container mx-auto px-4 py-8 max-w-2xl pb-32">
         <div className="mb-8">
           <Link
             href={`/trip/detail/${params.trip}`}

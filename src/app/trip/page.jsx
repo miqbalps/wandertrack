@@ -11,10 +11,12 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function TripListPage() {
+  const router = useRouter();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -29,7 +31,7 @@ export default function TripListPage() {
       const { data, error } = await supabase.auth.getUser();
 
       if (error || !data?.user) {
-        window.location.href = "/login";
+        router.push("/login");
         return;
       }
 
@@ -152,7 +154,7 @@ export default function TripListPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen mb-16">
       {/* Page Header */}
       <header className="px-4 pt-4 pb-2">
         <div className="flex justify-between items-center mb-3">

@@ -147,7 +147,7 @@ export default function MyTripsPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-[calc(100vh-64px)]">
       {/* Page Header */}
       <header className="px-4 pt-4 pb-2">
         <div className="flex justify-between items-center mb-3">
@@ -175,7 +175,7 @@ export default function MyTripsPage() {
       </header>
 
       {/* Trip List */}
-      <main className="px-4 pb-16">
+      <main className="px-4 mb-32">
         {/* My Trips Section */}
         <section className="mb-6">
           {displayedMyTrips.length > 0 ? (

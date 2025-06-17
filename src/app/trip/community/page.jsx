@@ -141,14 +141,14 @@ export default function OtherTripsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-[calc(100vh-64px)] flex items-center justify-center">
         <div className="animate-spin text-yellow-500">↻</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-[calc(100vh-64px)]">
       {/* Page Header */}
       <header className="px-4 pt-4 pb-2">
         <div className="flex justify-between items-center mb-3">
@@ -176,7 +176,7 @@ export default function OtherTripsPage() {
       </header>
 
       {/* Trip List */}
-      <main className="px-4 pb-16">
+      <main className="px-4 mb-32">
         {/* My Trips Section */}
         <section className="mb-6">
           {displayedOtherTrips.length > 0 ? (

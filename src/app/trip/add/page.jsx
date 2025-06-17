@@ -41,7 +41,7 @@ export default function AddTripPage() {
       const { data, error } = await supabase.auth.getUser();
 
       if (error || !data?.user) {
-        window.location.href = "/login";
+        router.push("/login");
         return;
       }
 
@@ -204,7 +204,7 @@ export default function AddTripPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950">
+    <div className="min-h-screen bg-white dark:bg-gray-950 mb-16">
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8 max-w-2xl pb-16">
         <div className="mb-8">

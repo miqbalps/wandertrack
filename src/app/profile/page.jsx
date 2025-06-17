@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   Mail,
   Fingerprint,
@@ -17,15 +18,41 @@ import {
 } from "lucide-react";
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [user, setUser] = useState(null);
   const [userTrips, setUserTrips] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function checkUser() {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
+        router.push("/login");
+        return;
+      }
+
+      setUser(data.user);
+      setLoading(false);
+    }
+
+    checkUser();
+  }, []);
 
   useEffect(() => {
     async function fetchData() {
       const supabase = createClient();
 
       try {
+        // First check auth session
+        const { data: sessionData } = await supabase.auth.getSession();
+
+        if (!sessionData.session) {
+          router.push("/login");
+          return;
+        }
+
         // Get user
         const {
           data: { user },
@@ -34,7 +61,7 @@ export default function ProfilePage() {
 
         if (userError) throw userError;
         if (!user) {
-          window.location.href = "/login";
+          router.push("/login");
           return;
         }
 
@@ -89,7 +116,7 @@ export default function ProfilePage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950/95 p-6">
+    <div className="min-h-[calc(100vh-64px)] bg-gray-50 dark:bg-gray-950/95 p-6 ">
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Profile Header */}
         <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm p-6">
@@ -110,7 +137,7 @@ export default function ProfilePage() {
           </div>
 
           {user && (
-            <div className="grid md:grid-cols-2 gap-4 text-white">
+            <div className="grid md:grid-cols-2 gap-4 dark:text-white">
               <CompactDetailItem
                 icon={Mail}
                 label="Email"

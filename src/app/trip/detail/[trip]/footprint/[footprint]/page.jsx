@@ -32,6 +32,23 @@ export default function FootprintDetailPage() {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
+    async function checkUser() {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
+        router.push("/login");
+        return;
+      }
+
+      setUser(data.user);
+      setLoading(false);
+    }
+
+    checkUser();
+  }, []);
+
+  useEffect(() => {
     async function fetchData() {
       const supabase = createClient();
 

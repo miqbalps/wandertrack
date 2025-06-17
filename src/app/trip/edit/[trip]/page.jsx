@@ -10,6 +10,8 @@ import Image from "next/image";
 export default function EditTripPage() {
   const router = useRouter();
   const params = useParams();
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(null);
   const supabase = createClient();
   const [formData, setFormData] = useState({
     title: "",
@@ -26,6 +28,23 @@ export default function EditTripPage() {
   const [showAddTag, setShowAddTag] = useState(false);
   const [newTag, setNewTag] = useState({ name: "", slug: "" });
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function checkUser() {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
+        router.push("/login");
+        return;
+      }
+
+      setUser(data.user);
+      setLoading(false);
+    }
+
+    checkUser();
+  }, []);
 
   // Fetch trip data
   useEffect(() => {
@@ -210,8 +229,8 @@ export default function EditTripPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-950">
-      <main className="container mx-auto px-4 py-8 max-w-2xl pb-16">
+    <div className="min-h-screen bg-white dark:bg-gray-950 mb-16">
+      <main className="container mx-auto px-4 py-8 max-w-2xl">
         <div className="mb-8">
           <Link
             href="/trip"

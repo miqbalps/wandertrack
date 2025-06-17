@@ -21,91 +21,6 @@ import "leaflet/dist/leaflet.css";
 
 // import ShareOptionsModal from "@/components/share/ShareOptionsModal";
 
-// Sample trip data with coordinates for mapping
-const trips = [
-  {
-    id: 1,
-    user_id: 1,
-    username: "explorer_jane",
-    title: "Himalayan Trip",
-    description:
-      "A 30-day trek through the Nepalese Himalayas, documenting remote villages and mountain landscapes.",
-    start_date: "2023-10-15",
-    end_date: "2023-11-14",
-    footprint_count: 18,
-    photo_count: 127,
-    cover_photo:
-      "https://images.unsplash.com/photo-1513415277900-a62401e19be4?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    locations: [
-      {
-        lat: 27.7172,
-        lng: 85.324,
-        name: "Kathmandu",
-        date: "2023-10-16",
-        photo:
-          "https://images.unsplash.com/photo-1564501049412-61c2a3083791?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      },
-      {
-        lat: 27.9881,
-        lng: 86.925,
-        name: "Mount Everest Base Camp",
-        date: "2023-10-25",
-        photo:
-          "https://images.unsplash.com/photo-1581617460601-b1e0b0bdb144?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      },
-      {
-        lat: 28.3949,
-        lng: 84.124,
-        name: "Annapurna Circuit",
-        date: "2023-11-05",
-        photo:
-          "https://images.unsplash.com/photo-1605540436563-5bca919ae766?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      },
-    ],
-  },
-  {
-    id: 2,
-    user_id: 2,
-    username: "desert_nomad",
-    title: "Sahara Crossing",
-    description:
-      "Journey across the Sahara desert following ancient trade routes.",
-    start_date: "2023-05-01",
-    end_date: "2023-05-21",
-    footprint_count: 12,
-    photo_count: 89,
-    cover_photo:
-      "https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=2076&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    locations: [
-      {
-        lat: 31.6295,
-        lng: -7.9811,
-        name: "Marrakech",
-        date: "2023-05-02",
-        photo:
-          "https://images.unsplash.com/photo-1518976024611-28bf4b48222e?q=80&w=1985&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      },
-      {
-        lat: 30.4278,
-        lng: -9.5981,
-        name: "Taroudant",
-        date: "2023-05-10",
-        photo:
-          "https://images.unsplash.com/photo-1570303345338-e1f0ed1b3b46?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      },
-      {
-        lat: 29.3759,
-        lng: -10.1726,
-        name: "Sahara Dunes",
-        date: "2023-05-15",
-        photo:
-          "https://images.unsplash.com/photo-1509316785289-025f5b846b35?q=80&w=2076&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      },
-    ],
-  },
-  // ... other trips with locations data
-];
-
 export default function Page() {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -399,7 +314,7 @@ export default function Page() {
       </section>
 
       {/* Interactive Map Section */}
-      <section id="map-section" className="px-4 py-6">
+      <section id="map-section" className="px-4 py-6 mb-16">
         <div className="mb-4">
           <h2 className="text-xl font-bold">
             Your <span className="text-yellow-500">Global</span> Footprint
@@ -429,10 +344,10 @@ export default function Page() {
           <MapHome
             trips={userTripsForMap}
             onFootprintSelect={setSelectedFootprint}
-            className="aspect-[4/3] mb-4"
+            className="mb-4"
           />
         ) : (
-          <div className="aspect-[4/3] mb-4 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+          <div className="aspect-[2 /1] mb-4 bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center justify-center">
             <Link
               href="/login"
               className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-black rounded-full font-bold flex items-center gap-1.5 text-sm"
@@ -443,7 +358,7 @@ export default function Page() {
         )}
 
         <Link
-          href="/trip"
+          href="/map"
           className="w-full py-2.5 bg-yellow-500 hover:bg-yellow-600 text-black rounded-full font-bold flex items-center justify-center gap-2 text-sm transform hover:scale-105 transition-transform mb-6"
         >
           <Globe className="w-5 h-5" /> Explore World Maps

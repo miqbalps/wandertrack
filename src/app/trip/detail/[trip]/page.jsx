@@ -31,6 +31,7 @@ export default function TripDetailPage() {
   });
   const params = useParams();
   const router = useRouter();
+  const [user, setUser] = useState(null);
   const [trip, setTrip] = useState(null);
   const [footprints, setFootprints] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
@@ -42,6 +43,23 @@ export default function TripDetailPage() {
   const isOwner = trip?.user_id === currentUser?.id;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    async function checkUser() {
+      const supabase = createClient();
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data?.user) {
+        router.push("/login");
+        return;
+      }
+
+      setUser(data.user);
+      setLoading(false);
+    }
+
+    checkUser();
+  }, []);
 
   const handleDelete = async () => {
     if (!isOwner) return;
@@ -220,7 +238,7 @@ export default function TripDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 mb-16">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-950">
         <div className="px-4 py-3 flex items-center justify-between">

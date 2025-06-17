@@ -74,10 +74,11 @@ export default function RouteMap({ footprints = [], className = "" }) {
       />
 
       {/* Route line connecting footprints */}
+      {/* color: "#EAB308" */}
       <Polyline
         positions={routeCoordinates}
         pathOptions={{
-          color: "#EAB308",
+          color: "red",
           weight: 3,
           opacity: 0.8,
           dashArray: "10, 10",
