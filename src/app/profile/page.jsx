@@ -16,12 +16,19 @@ import {
   MapPin,
   Camera,
 } from "lucide-react";
+import StatCard from "@/components/StatCard";
 
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [userTrips, setUserTrips] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const totalTrips = userTrips.length;
+  const totalFootprints = userTrips.reduce(
+    (acc, trip) => acc + (trip.footprints?.length || 0),
+    0
+  );
 
   useEffect(() => {
     async function checkUser() {
@@ -107,6 +114,8 @@ export default function ProfilePage() {
     fetchData();
   }, []);
 
+  const displayedRecentTrips = userTrips.slice(0, 2);
+
   const CompactDetailItem = ({ icon: Icon, label, value }) => (
     <div className="flex items-center gap-2 text-sm">
       <Icon size={16} className="text-yellow-600" />
@@ -162,11 +171,24 @@ export default function ProfilePage() {
           )}
         </div>
 
+        <div className="grid grid-cols-2 gap-4">
+          <StatCard
+            Icon={MapPin} // Pass the component directly, not as a string
+            label="Total Trips"
+            value={totalTrips}
+          />
+          <StatCard
+            Icon={Camera} // Pass the component directly, not as a string
+            label="Total Footprints"
+            value={totalFootprints}
+          />
+        </div>
+
         {/* User Trips */}
         <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm p-4">
           <div className="flex justify-between items-center mb-3">
             <h2 className="text-xl font-bold text-gray-800 dark:text-white">
-              My Trips
+              My Recent Trips
             </h2>
             <Link
               href="/trip/create"
@@ -185,9 +207,9 @@ export default function ProfilePage() {
                 />
               ))}
             </div>
-          ) : userTrips.length > 0 ? (
+          ) : displayedRecentTrips.length > 0 ? (
             <div className="grid grid-cols-2 gap-2">
-              {userTrips.map((trip) => (
+              {displayedRecentTrips.map((trip) => (
                 <Link
                   key={trip.id}
                   href={`/trip/detail/${trip.id}`}

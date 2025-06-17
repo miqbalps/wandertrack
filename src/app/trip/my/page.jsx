@@ -122,7 +122,13 @@ export default function MyTripsPage() {
     };
   }, []);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading)
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <div className="text-center text-yellow-500">Loading</div>
+        <div className="animate-spin text-yellow-500">↻</div>
+      </div>
+    );
 
   // Filter trips based on search and filter
   const filteredTrips = trips.filter(
