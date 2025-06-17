@@ -292,6 +292,9 @@ export default function AddFootprintPage() {
                     className="w-full h-full object-cover"
                     width={800}
                     height={600}
+                    sizes={20}
+                    priority={false}
+                    quality={50}
                   />
                   <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <button

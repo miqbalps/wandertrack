@@ -215,8 +215,10 @@ export default function Page() {
           src="https://plus.unsplash.com/premium_photo-1694475616112-bf74aa5f12ea?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
           alt="Hero Image"
           fill
+          sizes={20}
+          priority={true}
+          quality={80}
           className="object-cover group-hover:scale-105 transition-transform duration-500"
-          priority
         />
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex items-center px-6">
@@ -274,6 +276,9 @@ export default function Page() {
                       src={trip.cover_photo_url || "/default-trip-cover.jpg"}
                       alt={trip.title}
                       fill
+                      sizes={20}
+                      priority={false}
+                      quality={20}
                       className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
@@ -390,6 +395,9 @@ export default function Page() {
                     alt={selectedFootprint.name}
                     fill
                     className="object-cover"
+                    sizes={20}
+                    priority={false}
+                    quality={50}
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">

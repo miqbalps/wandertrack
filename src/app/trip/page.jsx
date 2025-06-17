@@ -287,6 +287,9 @@ function VerticalTripCard({ trip, isOwner }) {
               alt={trip.title}
               fill
               className="object-cover group-hover:scale-105 transition-transform"
+              sizes={20}
+              quality={20}
+              priority={false}
             />
           ) : (
             <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
@@ -345,6 +348,9 @@ function HorizontalTripCard({ trip, isOwner }) {
                 alt={trip.title}
                 fill
                 className="object-cover group-hover:scale-105 transition-transform"
+                sizes={20}
+                quality={20}
+                priority={false}
               />
             ) : (
               <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">

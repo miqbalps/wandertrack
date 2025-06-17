@@ -284,6 +284,9 @@ export default function TripDetailPage() {
               src={trip.cover_photo_url}
               alt={trip.title}
               fill
+              sizes={20}
+              priority={false}
+              quality={80}
               className="object-cover"
             />
           ) : (
@@ -624,6 +627,9 @@ function FootprintCard({ footprint, index, isOwner, tripId, onDelete }) {
               src={footprint.cover_photo_url}
               alt={footprint.title}
               fill
+              sizes={20}
+              priority={false}
+              quality={20}
               className="object-cover group-hover:scale-105 transition-transform duration-500"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />

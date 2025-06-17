@@ -198,6 +198,9 @@ export default function ProfilePage() {
                       src={trip.cover_photo_url || "/default-trip-cover.jpg"}
                       alt={trip.title}
                       fill
+                      sizes={20}
+                      priority={false}
+                      quality={20}
                       className="object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />

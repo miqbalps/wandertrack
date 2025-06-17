@@ -254,6 +254,9 @@ export default function MapPage() {
                     alt={selectedFootprint.name}
                     fill
                     className="object-cover"
+                    sizes={20}
+                    priority={false}
+                    quality={50}
                   />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-yellow-400 to-yellow-600 flex items-center justify-center">

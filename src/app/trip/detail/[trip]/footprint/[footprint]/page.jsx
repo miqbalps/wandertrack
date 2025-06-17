@@ -164,6 +164,9 @@ export default function FootprintDetailPage() {
               src={footprint.cover_photo_url}
               alt={footprint.title}
               fill
+              sizes={20}
+              priority={false}
+              quality={80}
               className="object-cover"
             />
           </div>

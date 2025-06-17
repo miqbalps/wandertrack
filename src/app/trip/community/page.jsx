@@ -220,6 +220,9 @@ function VerticalTripCard({ trip, isOwner }) {
               src={trip.cover_photo_url}
               alt={trip.title}
               fill
+              sizes={20}
+              priority={false}
+              quality={20}
               className="object-cover group-hover:scale-105 transition-transform"
             />
           ) : (
