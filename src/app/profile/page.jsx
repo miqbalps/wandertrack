@@ -191,7 +191,7 @@ export default function ProfilePage() {
               My Recent Trips
             </h2>
             <Link
-              href="/trip/create"
+              href="/trip/add"
               className="px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-black rounded text-sm font-medium"
             >
               + New Trip
